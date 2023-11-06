@@ -1,7 +1,7 @@
 #!/bin/bash
 echo
 echo "Script to test pLab-04"
-echo "By: Mohamed Aboutabl"
+echo "By: Mohamed Aboutabl, Hudson Shaeffer, & Zane Metz"
 
 rm -f dispatcher   kdc/kdc             kdc/logKDC.txt    
 rm -f amal/amal    amal/logAmal.txt  

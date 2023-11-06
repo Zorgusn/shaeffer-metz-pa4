@@ -4,7 +4,10 @@ FILE:   dispatcher.c
 
 Written By: 
      1- Dr. Mohamed Aboutabl
+     2- Hudson Shaeffer
+     3- Zane Metz
 Submitted on: 
+    11/8/23
 -------------------------------------------------------------------------------*/
 
 #include <unistd.h>
@@ -21,12 +24,27 @@ Submitted on:
 //--------------------------------------------------------------------------
 int main( int argc , char *argv[] )
 {
-    pid_t  amalPID , basimPID ; 
+    pid_t  amalPID , basimPID , kdcPID ;  // PIDs for forking 
+
+    int    KtoA_ctrl[2] , KtoA_data[2] ;  // KDC to Amal control and data pipes
+    int    AtoK_ctrl[2] , AtoK_data[2] ;  // Amal to KDC control and data pipes
+
     int    AtoB_ctrl[2] , AtoB_data[2] ;  // Amal to Basim control and data pipes
-    char   arg1[20] , arg2[20] ;
+    int    BtoA_ctrl[2] , BtoA_data[2] ;  // Basim to Amal control and data pipes
+
+    char   arg1[20] , arg2[20] , arg3[20], arg4[20] ;  // args for later use
+
+    Pipe( KtoA_ctrl ) ; // create pipe for KDC-to-Amal control
+    Pipe( KtoA_data ) ; // create pipe for KDC-to-Amal data
+
+    Pipe( AtoK_ctrl ) ; // create pipe for Amal-to-KDC control
+    Pipe( AtoK_data ) ; // create pipe for Amal-to-KDC data
     
     Pipe( AtoB_ctrl ) ;  // create pipe for Amal-to-Basim control
     Pipe( AtoB_data ) ;  // create pipe for Amal-to-Basim data
+    
+    Pipe( BtoA_ctrl ) ;  // create pipe for Basim-to-Amal control
+    Pipe( BtoA_data ) ;  // create pipe for Basim-to-Amal data
 
     printf("\tDispatcher started and created these pipes\n") ;
     printf("\tAmal-to-Basim control pipe: read=%d  write=%d\n", AtoB_ctrl[ READ_END ] , AtoB_ctrl[ WRITE_END ] ) ;
