@@ -19,4 +19,16 @@ Basim has this Master Kb { key , IV }
 ***************************************************
          MSG1 Receive
 ***************************************************
-Out of Memory allocating 13 bytes for IDA in MSG1_receive() ... EXITING
+MSG1 ( 40 bytes ) has been received on FD 3 by MSG1_receive():
+
+KDC received message 1 from Amal with:
+    IDa = 'Amal is Hope'
+    IDb = 'Basim is Smily'
+    Na ( 4 Bytes ) is:
+    0000 - 44 33 22 11                                       D3".
+
+***************************************************
+         MSG2 New
+***************************************************
+
+The KDC has terminated normally. Goodbye

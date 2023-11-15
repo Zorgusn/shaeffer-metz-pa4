@@ -8,7 +8,7 @@ Written By:
      2- Zane Metz
      3- Hudson Shaeffer
 Submitted on: 
-     11/17/32
+     11/15/32
 ----------------------------------------------------------------------------*/
 
 #include <linux/random.h>
@@ -101,7 +101,7 @@ int main ( int argc , char * argv[] )
     fprintf( log , "         MSG1 Receive\n");
     BANNER( log ) ;
 
-    char *IDa = "", *IDb = "";
+    char *IDa, *IDb;
     Nonce_t  Na ;
     
     // Get MSG1 from Amal

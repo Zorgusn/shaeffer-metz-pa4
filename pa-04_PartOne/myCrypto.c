@@ -7,7 +7,7 @@ Written By:
      1- Hudson Shaeffer
      2- Zane Metz
 Submitted on:
-     11/17/23
+     11/15/23
 
 ----------------------------------------------------------------------------*/
 
@@ -495,7 +495,7 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
   // 2) Allocate memory for ID_A
   *IDa = calloc(1, LenA);
   // On failure to allocate memory:
-  if (*IDa == NULL);
+  if (*IDa == NULL)
   {
     fprintf (log,
              "Out of Memory allocating %u bytes for IDA in MSG1_receive() "
@@ -507,7 +507,7 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
   }
 
   // On failure to read ID_A from the pipe
-  if (read(fd, IDa, LenA) < 0)
+  if (read(fd, *IDa, LenA) < 0)
   {
     fprintf (log,
              "Unable to receive all %u bytes of IDA in MSG1_receive() "
@@ -549,7 +549,7 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
   }
 
   // On failure to read ID_B from the pipe
-  if (read(fd, IDb, LenB) < 0)
+  if (read(fd, *IDb, LenB) < 0)
   {
     fprintf (log,
              "Unable to receive all %u bytes of IDB in MSG1_receive() "
@@ -581,8 +581,6 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
            " on FD %d by MSG1_receive():\n",
            LenMsg1, fd);
   fflush (log);
-
-  return;
 }
 
 //***********************************************************************
