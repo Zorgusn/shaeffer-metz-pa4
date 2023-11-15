@@ -19,4 +19,4 @@ Basim has this Master Kb { key , IV }
 ***************************************************
          MSG1 Receive
 ***************************************************
-Unable to receive all 4 bytes of Len(IDA) in MSG1_receive() ... EXITING
+Unable to receive all 1634550028 bytes of IDA in MSG1_receive() ... EXITING

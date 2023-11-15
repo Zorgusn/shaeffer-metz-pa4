@@ -4,22 +4,29 @@ Starting Amal
 
 <readFr. KDC> FD=5 , <sendTo KDC> FD=4 , <readFr. Basim> FD=9 , <sendTo Basim> FD=8
 
+Amal has this Master Ka { key , IV }
+    0000 - 8c c4 92 2e 45 07 e9 4b-2c c2 c8 93 89 6f 8a d4   ....E..K,....o..
+    0010 - 08 42 23 62 43 b3 49 fe-3f fe 98 d1 9b 77 e2 b7   .B#bC.I.?....w..
 
+    0000 - d5 56 98 3a ef b5 d1 8f-93 53 a7 b1 68 31 13 ff   .V.:.....S..h1..
 Amal will use these Nonces:  Na  and Na2
+    0000 - 44 33 22 11                                       D3".
 
+    0000 - dd cc bb aa                                       ....
 
 ***************************************************
          MSG1 New
 ***************************************************
 The following new MSG1 ( 38 bytes ) has been created by MSG1_new ():
-    0000 - a0 38 3f 9d 75 55 00 00-40 00 22 9c 75 55 00 00   .8?.uU..@.".uU..
-    0010 - b0 16 3f 9d 75 55 00 00-0d 02 22 9c 75 55 00 00   ..?.uU....".uU..
-    0020 - 1a 02 22 9c 75 55                                 ..".uU
+    0000 - a0 68 4f f3 54 56 00 00-40 70 c9 f1 54 56 00 00   .hO.TV..@p..TV..
+    0010 - b0 46 4f f3 54 56 00 00-6d 72 c9 f1 54 56 00 00   .FO.TV..mr..TV..
+    0020 - 7a 72 c9 f1 54 56                                 zr..TV
 
 Amal sent message 1 ( 38 bytes ) to the KDC with:
     IDa ='Amal is Hope'
     IDb = 'Basim is Smily'
     Na ( 4 Bytes ) is:
+    0000 - 44 33 22 11                                       D3".
 ***************************************************
          MSG2 Receive
 ***************************************************
