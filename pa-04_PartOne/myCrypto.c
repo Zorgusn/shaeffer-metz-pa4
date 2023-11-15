@@ -406,12 +406,14 @@ MSG1_new (FILE *log, uint8_t **msg1, const char *IDa, const char *IDb,
 {
 
   //  Check agains any NULL pointers in the arguments
-  if (log == NULL || msg1 == NULL || IDa == NULL || IDb == NULL || Na == 0) {
+  if (log == NULL || msg1 == NULL || IDa == NULL || IDb == NULL || Na == NULL) {
     exitError("MSG1_new: Invalid parameters passed");
   }
 
-  uint32_t LenA = strlen(IDa), LenB = strlen(IDb); 
-  uint32_t LenMsg1 = 2 * sizeof(uint32_t) + LenA + LenB + NONCELEN;
+  // strlen + 1 for the string terminator
+  unsigned LenA = strlen(IDa) + 1, LenB = strlen(IDb) + 1; 
+  unsigned LenMsg1 = LENSIZE + LenA + LENSIZE + LenB + NONCELEN;
+  int offset = 0;
   uint8_t *p;
 
   // Allocate memory for msg1. MUST always check malloc() did not fail
@@ -422,16 +424,28 @@ MSG1_new (FILE *log, uint8_t **msg1, const char *IDa, const char *IDb,
 
   // Fill in Msg1:  Len( IDa )  ||  IDa   ||  Len( IDb )  ||  IDb   ||  Na
   p = *msg1;
-  p[0] = LenA;                                  // put len IDa
+  for (int i = 0; i < LENSIZE; i++) {           // put len IDa
+    p[i] = ((uint8_t*) &LenA)[i];
+  }
+  offset += LENSIZE;
+
   for (int i = 0; i < LenA; i++) {              // put IDa
-    p[i + 1] = IDa[i];
+    p[i + offset] = ((uint8_t *) IDa)[i];
   }
-  p[LenA + 1] = LenB;                           // put len IDb
+  offset += LenA;
+
+  for (int i = 0; i < LENSIZE; i++) {           // put len IDb
+    p[i + offset] = ((uint8_t*) &LenB)[i];
+  }
+  offset += LENSIZE;
+
   for (int i = 0; i < LenB; i++) {              // put IDb
-    p[i + 2 + LenA] = IDb[i];
+    p[i + offset] = ((uint8_t *) IDb)[i];
   }
-  for (int i = 0; i < NONCELEN; i++) {   // put nonce
-    p[i + 2 + LenA + LenB] = ((uint8_t *)Na)[i];
+  offset += LenB;
+
+  for (int i = 0; i < NONCELEN; i++) {          // put nonce
+    p[i + offset] = ((uint8_t *)Na)[i];
   }
 
   fprintf (
@@ -439,7 +453,7 @@ MSG1_new (FILE *log, uint8_t **msg1, const char *IDa, const char *IDb,
       "The following new MSG1 ( %u bytes ) has been created by MSG1_new ():\n",
       LenMsg1);
   // BIO_dumpt the completed MSG1 indented 4 spaces to the right
-  BIO_dump_indent_fp(log, msg1, LenMsg1, 4);
+  BIO_dump_indent_fp(log, *msg1, LenMsg1, 4);
   fprintf (log, "\n");
 
   return LenMsg1;
@@ -454,14 +468,18 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
 {
 
   //  Check agains any NULL pointers in the arguments
+  if (log == NULL || IDa == NULL || IDb == NULL || Na == NULL) {
+    exitError("MSG1_receive: Invalid parameters passed");
+  }
 
-  unsigned LenMsg1 = 0, LenA, lenB;
+  unsigned LenMsg1 = 0, LenA, LenB;
   // Throughout this function, don't forget to update LenMsg1 as you receive
   // its components
 
   // Read in the components of Msg1:  L(A)  ||  A   ||  L(B)  ||  B   ||  Na
   // 1) Read Len(ID_A)  from the pipe
   // On failure to read Len(IDa):
+  if (read(fd, &LenA, LENSIZE) < 0)
   {
     fprintf (log,
              "Unable to receive all %lu bytes of Len(IDA) "
@@ -472,9 +490,12 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
     fclose (log);
     exitError ("Unable to receive all bytes LenA in MSG1_receive()");
   }
+  LenMsg1 += LENSIZE;
 
   // 2) Allocate memory for ID_A
+  *IDa = calloc(1, LenA);
   // On failure to allocate memory:
+  if (*IDa == NULL);
   {
     fprintf (log,
              "Out of Memory allocating %u bytes for IDA in MSG1_receive() "
@@ -486,6 +507,7 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
   }
 
   // On failure to read ID_A from the pipe
+  if (read(fd, IDa, LenA) < 0)
   {
     fprintf (log,
              "Unable to receive all %u bytes of IDA in MSG1_receive() "
@@ -495,9 +517,11 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
     fclose (log);
     exitError ("Unable to receive all bytes of IDA in MSG1_receive()");
   }
+  LenMsg1 += LenA;
 
   // 3) Read Len( ID_B )  from the pipe
   // On failure to read Len( ID_B ):
+  if (read(fd, &LenB, LENSIZE) < 0)
   {
     fprintf (log,
              "Unable to receive all %lu bytes of Len(IDB) "
@@ -508,32 +532,38 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
     fclose (log);
     exitError ("Unable to receive all bytes of LenB in MSG1_receive()");
   }
+  LenMsg1 += LENSIZE;
 
   // 4) Allocate memory for ID_B
+  *IDb = calloc(1, LenB);
   // On failure to allocate memory:
+  if (*IDb == NULL)
   {
     fprintf (log,
              "Out of Memory allocating %u bytes for IDB in MSG1_receive() "
              "... EXITING\n",
-             lenB);
+             LenB);
     fflush (log);
     fclose (log);
     exitError ("Out of Memory allocating IDB in MSG1_receive()");
   }
 
   // On failure to read ID_B from the pipe
+  if (read(fd, IDb, LenB) < 0)
   {
     fprintf (log,
              "Unable to receive all %u bytes of IDB in MSG1_receive() "
              "... EXITING\n",
-             lenB);
+             LenB);
     fflush (log);
     fclose (log);
     exitError ("Unable to receive all bytes of IDB in MSG1_receive()");
   }
+  LenMsg1 += LenB;
 
   // 5) Read Na
   // On failure to read Na from the pipe
+  if (read(fd, Na, NONCELEN) < 0)
   {
     fprintf (log,
              "Unable to receive all %lu bytes of Na "
@@ -544,6 +574,7 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
     fclose (log);
     exitError ("Unable to receive all bytes of Na in MSG1_receive()");
   }
+  LenMsg1 += NONCELEN;
 
   fprintf (log,
            "MSG1 ( %u bytes ) has been received"

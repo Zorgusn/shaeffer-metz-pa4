@@ -19,4 +19,4 @@ Basim has this Master Kb { key , IV }
 ***************************************************
          MSG1 Receive
 ***************************************************
-Unable to receive all 1634550028 bytes of IDA in MSG1_receive() ... EXITING
+Out of Memory allocating 13 bytes for IDA in MSG1_receive() ... EXITING

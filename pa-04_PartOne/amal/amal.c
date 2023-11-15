@@ -94,6 +94,7 @@ int main ( int argc , char * argv[] )
     fprintf( log , "\n" );
 	// BIO_dump the IV indented 4 spaces to the righ
     BIO_dump_indent_fp(log, Ka.iv, INITVECTOR_LEN, 4);
+    fprintf( log , "\n" );
 
 
     // Get Amal's pre-created Nonces: Na and Na2
@@ -132,6 +133,7 @@ int main ( int argc , char * argv[] )
     fprintf( log , "    Na ( %lu Bytes ) is:\n" , NONCELEN ) ;
     // BIO_dump the nonce Na
     BIO_dump_indent_fp(log, Na, NONCELEN, 4);
+    fprintf(log, "\n");
     fflush( log ) ;
 
     // Deallocate any memory allocated for msg1

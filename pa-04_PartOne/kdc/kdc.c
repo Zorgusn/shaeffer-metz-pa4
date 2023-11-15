@@ -5,7 +5,10 @@ FILE:   kdc.c    SKELETON
 
 Written By: 
      1- Dr. Mohamed Aboutabl
+     2- Zane Metz
+     3- Hudson Shaeffer
 Submitted on: 
+     11/17/32
 ----------------------------------------------------------------------------*/
 
 #include <linux/random.h>
@@ -22,7 +25,7 @@ int main ( int argc , char * argv[] )
     int       fd_A2K , fd_K2A   ;
     FILE     *log ;
     
-    char *developerName = "REFERENCE Code by ABOUTABL" ;
+    char *developerName = "Code by Zane Metz & Hudson Shaeffer" ;
 
     fprintf( stdout , "Starting the KDC's   %s\n"  , developerName ) ;
 
@@ -33,8 +36,8 @@ int main ( int argc , char * argv[] )
         exit(-1) ;
     }
 
-    fd_A2K    = ....  ;  // Read from Amal   File Descriptor
-    fd_K2A    = ....  ;  // Send to   Amal   File Descriptor
+    fd_A2K    = atoi(argv[1])  ;  // Read from Amal   File Descriptor
+    fd_K2A    = atoi(argv[2])  ;  // Send to   Amal   File Descriptor
 
     log = fopen("kdc/logKDC.txt" , "w" );
     if( ! log )
@@ -55,12 +58,19 @@ int main ( int argc , char * argv[] )
     // Use  getKeyFromFile( "kdc/amalKey.bin" , ....  )
 	// On failure, print "\nCould not get Amal's Masker key & IV.\n" to both  stderr and the Log file
 	// and exit(-1)
+    if (getKeyFromFile("kdc/amalKey.bin", &Ka) == 0) {
+        fprintf(stderr, "\nCould not get Amal's Masker key & IV.\n");
+        fprintf(log, "\nCould not get Amal's Masker key & IV.\n");
+        exit(-1);
+    }
 	// On success, print "Amal has this Master Ka { key , IV }\n" to the Log file
+    fprintf(log, "Amal has this Master Ka { key , IV }\n");
 	// BIO_dump the Key IV indented 4 spaces to the righ
+    BIO_dump_indent_fp(log, Ka.key, SYMMETRIC_KEY_LEN, 4);
     fprintf( log , "\n" );
 	// BIO_dump the IV indented 4 spaces to the righ
-
-
+    BIO_dump_indent_fp(log, Ka.iv, INITVECTOR_LEN, 4);
+    fprintf( log , "\n" );
     fflush( log ) ;
     
     // Get Basim's master keys with the KDC
@@ -69,10 +79,19 @@ int main ( int argc , char * argv[] )
     // Use  getKeyFromFile( "kdc/basimKey.bin" , .... ) )
 	// On failure, print "\nCould not get Basim's Masker key & IV.\n" to both  stderr and the Log file
 	// and exit(-1)
-	// On success, print "Basim has this Master Ka { key , IV }\n" to the Log file
+    if (getKeyFromFile("kdc/basimKey.bin", &Kb) == 0) {
+        fprintf(stderr, "\nCould not get Basim's Masker key & IV.\n");
+        fprintf(log, "\nCould not get Basim's Masker key & IV.\n");
+        exit(-1);
+    }
+	// On success, print "Basim has this Master Kb { key , IV }\n" to the Log file
+    fprintf(log, "Basim has this Master Kb { key , IV }\n");
 	// BIO_dump the Key IV indented 4 spaces to the righ
+    BIO_dump_indent_fp(log, Kb.key, SYMMETRIC_KEY_LEN, 4);
     fprintf( log , "\n" );
 	// BIO_dump the IV indented 4 spaces to the righ
+    BIO_dump_indent_fp(log, Kb.iv, INITVECTOR_LEN, 4);
+    fprintf( log , "\n" );
     fflush( log ) ;
 
     //*************************************
@@ -82,7 +101,7 @@ int main ( int argc , char * argv[] )
     fprintf( log , "         MSG1 Receive\n");
     BANNER( log ) ;
 
-    char *IDa , *IDb ;
+    char *IDa = "", *IDb = "";
     Nonce_t  Na ;
     
     // Get MSG1 from Amal
@@ -93,9 +112,14 @@ int main ( int argc , char * argv[] )
                    "    IDb = '%s'\n" , IDa , IDb ) ;
 
     fprintf( log , "    Na ( %lu Bytes ) is:\n" , NONCELEN ) ;
-     // BIO_dump the nonce Na
-
+    // BIO_dump the nonce Na
+    BIO_dump_indent_fp(log, Na, NONCELEN, 4);
+    fprintf( log , "\n" );
     fflush( log ) ;
+
+    // free calloc from msg1_receive
+    free(IDa);
+    free(IDb);
 
     //*************************************   
     // Construct & Send    Message 2

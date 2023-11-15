@@ -1,7 +1,7 @@
 
 Starting KDC  's REFERENCE Code by ABOUTABL.
 
-Logged in as user 'metzza' on Wed Nov  8 12:16:55 2023
+Logged in as user 'shaeffhk' on Wed Nov 15 15:17:24 2023
 
 <readFr. Amal> FD=3 , <sendTo Amal> FD=6
 
