@@ -4,10 +4,10 @@ PA-04:  Part One Intro to Enhanced Needham-Schroeder Key-Exchange with TWO-way A
 FILE:   amal.c     SKELETON
 
 Written By: 
-     1- Zane Metz
-	 2- Hudson Shaeffer
+     1- Hudson Shaeffer
+	 2- Zane Metz
 Submitted on: 
-     Insert the date of Submission here
+     11/17/23
 ----------------------------------------------------------------------------*/
 
 #include <linux/random.h>
@@ -47,7 +47,7 @@ int main ( int argc , char * argv[] )
     int      fd_A2K , fd_K2A , fd_A2B , fd_B2A  ;
     FILE    *log ;
 
-    char *developerName = "REFERENCE Code by ABOUTABL" ;
+    char *developerName = "Code by Hudson Shaeffer & Zane Metz" ;
 
     fprintf( stdout , "Starting Amal's      %s.\n" , developerName  ) ;
     
@@ -57,10 +57,10 @@ int main ( int argc , char * argv[] )
                "<getFr. Basim> <sendTo Basim>\n\n" , argv[0]) ;
         exit(-1) ;
     }
-    fd_K2A    = ...... ;  // Read from KDC    File Descriptor
-    fd_A2K    = ...... ;  // Send to   KDC    File Descriptor
-    fd_B2A    = ...... ;  // Read from Basim  File Descriptor
-    fd_A2B    = ...... ;  // Send to   Basim  File Descriptor
+    fd_K2A    = atoi(argv[1]) ;  // KDC   to  Amal   File Descriptor
+    fd_A2K    = atoi(argv[2]) ;  // Amal  to  KDC    File Descriptor
+    fd_B2A    = atoi(argv[3]) ;  // Basim to  Amal   File Descriptor
+    fd_A2B    = atoi(argv[4]) ;  // Amal  to  Basim  File Descriptor
 
     log = fopen("amal/logAmal.txt" , "w" );
     if( ! log )
