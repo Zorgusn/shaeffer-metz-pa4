@@ -4,8 +4,8 @@ PA-04:  Part One Intro to Enhanced Needham-Schroeder Key-Exchange with TWO-way A
 FILE:   amal.c     SKELETON
 
 Written By: 
-     1- YOU  MUST   WRITE 
-	 2- FULL NAMES  HERE   (or risk losing points )
+     1- Zane Metz
+	 2- Hudson Shaeffer
 Submitted on: 
      Insert the date of Submission here
 ----------------------------------------------------------------------------*/
