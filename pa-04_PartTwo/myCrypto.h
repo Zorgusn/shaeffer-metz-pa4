@@ -17,6 +17,7 @@ Written By:
 #include <string.h>
 #include <linux/random.h>
 #include <assert.h>
+#include <arpa/inet.h>
 
 /* OpenSSL headers */
 #include <openssl/ssl.h>
@@ -99,4 +100,25 @@ void     MSG1_receive( FILE *log , int fd , char **IDa , char **IDb , Nonce_t Na
 //***********************************************************************
 // PA-04   Part  TWO
 //***********************************************************************
+
+unsigned MSG2_new( FILE * log , uint8_t **msg2 , const myKey_t *Ka , const myKey_t *Kb , 
+                   const myKey_t *Ks , const char *IDa , const char *IDb , Nonce_t *Na ) ;
+
+void     MSG2_receive( FILE *log , int fd , const myKey_t *Ka , myKey_t *Ks, char **IDb , 
+                       Nonce_t *Na , unsigned *lenTktCipher , uint8_t **tktCipher ) ;
+
+unsigned MSG3_new( FILE *log , uint8_t **msg3 , const unsigned lenTktCipher , const uint8_t *tktCipher, 
+                   const Nonce_t *Na2 ) ;
+
+void     MSG3_receive( FILE *log , int fd , const myKey_t *Kb , myKey_t *Ks , char **IDa , Nonce_t *Na2 ) ;
+
+unsigned MSG4_new( FILE *log , uint8_t **msg4, const myKey_t *Ks , Nonce_t *fNa2 , Nonce_t *Nb ) ;
+
+void     MSG4_receive( FILE *log , int fd , const myKey_t *Ks , Nonce_t *rcvd_fNa2 , Nonce_t *Nb ) ;
+
+unsigned MSG5_new( FILE *log , uint8_t **msg5, const myKey_t *Ks ,  Nonce_t *fNb ) ;
+
+void     MSG5_receive( FILE *log , int fd , const myKey_t *Ks , Nonce_t *fNb ) ;
+
+void     fNonce( Nonce_t r , Nonce_t n ) ;
 
