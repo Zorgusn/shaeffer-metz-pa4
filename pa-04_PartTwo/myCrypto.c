@@ -481,9 +481,7 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
   {
     fprintf (log,
              "Unable to receive all %lu bytes of Len(IDA) "
-             "in MSG1_receive() ... EXITING\n",
-             LENSIZE);
-
+             "in MSG1_receive() ... EXITING\n", LENSIZE);
     fflush (log);
     fclose (log);
     exitError ("Unable to receive all bytes LenA in MSG1_receive()");
@@ -497,8 +495,7 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
   {
     fprintf (log,
              "Out of Memory allocating %u bytes for IDA in MSG1_receive() "
-             "... EXITING\n",
-             LenA);
+             "... EXITING\n", LenA);
     fflush (log);
     fclose (log);
     exitError ("Out of Memory allocating IDA in MSG1_receive()");
@@ -509,8 +506,7 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
   {
     fprintf (log,
              "Unable to receive all %u bytes of IDA in MSG1_receive() "
-             "... EXITING\n",
-             LenA);
+             "... EXITING\n", LenA);
     fflush (log);
     fclose (log);
     exitError ("Unable to receive all bytes of IDA in MSG1_receive()");
@@ -523,9 +519,7 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
   {
     fprintf (log,
              "Unable to receive all %lu bytes of Len(IDB) "
-             "in MSG1_receive() ... EXITING\n",
-             LENSIZE);
-
+             "in MSG1_receive() ... EXITING\n", LENSIZE);
     fflush (log);
     fclose (log);
     exitError ("Unable to receive all bytes of LenB in MSG1_receive()");
@@ -539,8 +533,7 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
   {
     fprintf (log,
              "Out of Memory allocating %u bytes for IDB in MSG1_receive() "
-             "... EXITING\n",
-             LenB);
+             "... EXITING\n", LenB);
     fflush (log);
     fclose (log);
     exitError ("Out of Memory allocating IDB in MSG1_receive()");
@@ -551,8 +544,7 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
   {
     fprintf (log,
              "Unable to receive all %u bytes of IDB in MSG1_receive() "
-             "... EXITING\n",
-             LenB);
+             "... EXITING\n", LenB);
     fflush (log);
     fclose (log);
     exitError ("Unable to receive all bytes of IDB in MSG1_receive()");
@@ -565,9 +557,7 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
   {
     fprintf (log,
              "Unable to receive all %lu bytes of Na "
-             "in MSG1_receive() ... EXITING\n",
-             NONCELEN);
-
+             "in MSG1_receive() ... EXITING\n", NONCELEN);
     fflush (log);
     fclose (log);
     exitError ("Unable to receive all bytes of Na in MSG1_receive()");
@@ -576,8 +566,7 @@ MSG1_receive (FILE *log, int fd, char **IDa, char **IDb, Nonce_t Na)
 
   fprintf (log,
            "MSG1 ( %u bytes ) has been received"
-           " on FD %d by MSG1_receive():\n",
-           LenMsg1, fd);
+           " on FD %d by MSG1_receive():\n", LenMsg1, fd);
   fflush (log);
 }
 
@@ -708,7 +697,7 @@ unsigned MSG2_new( FILE *log , uint8_t **msg2, const myKey_t *Ka , const myKey_t
     }
 
     for (int i = 0; i < LENSIZE; i++) {
-      *msg2[i] = ((uint8_t*) LenMsg2)[i];
+      *msg2[i] = ((uint8_t*) LenMsg2Cipher)[i];
     }
 
     for (int i = 0; i < LenMsg2Cipher; i++) {
@@ -734,11 +723,87 @@ void MSG2_receive( FILE *log , int fd , const myKey_t *Ka , myKey_t *Ks, char **
                        Nonce_t *Na , unsigned *lenTktCipher , uint8_t **tktCipher )
 {
 
+  if (log == NULL || fd == 0 || Ka == NULL || Ks == NULL || 
+      IDb == NULL || Na == NULL || lenTktCipher == NULL || tktCipher == NULL) {
+    exitError("MSG2_recieve: Invalid Parameters passed");
+  }
 
-    fprintf( log ,"MSG2_receive() got the following Encrypted MSG2 ( %u bytes ) Successfully\n" 
-                 , .... );
+  unsigned LenMsg2 = 0, LenMsg2Cipher = 0, LenB = 0;
 
+  if (read(fd, &LenMsg2Cipher, LENSIZE) < 0) 
+  {
+    fprintf(log,
+            "Unable to receive all %lu bytes of Len(MSG2) " 
+            "in MSG2_receive() ... EXITING\n", LENSIZE);
 
+    fflush(log);
+    close(log);
+    exitError("Unable to receive all bytes LenMsg2 in MSG2_receive()");
+  }
+  LenMsg2 += LENSIZE;
+
+  memset(ciphertext, 0, CIPHER_LEN_MAX);
+
+  if (read(fd, ciphertext, LenMsg2Cipher) < 0)
+  {
+    fprintf(log,
+            "Unable to receive all %lu bytes of MSG2 "
+            "in MSG2_receive() ... EXITING\n", LenMsg2Cipher);
+    fflush(log);
+    close(log);
+    exitError("Unable to receive all bytes Encrypted Msg2 in MSG2_receive()");
+  }
+  LenMsg2 += LenMsg2Cipher;
+  
+  fprintf( log ,"MSG2_receive() got the following Encrypted MSG2 ( %u bytes ) Successfully\n" 
+                 , LenMsg2Cipher );
+
+  memset(decryptext, 0, DECRYPTED_LEN_MAX);
+
+  decrypt(ciphertext, LenMsg2Cipher, Ka->key, Ka->iv, decryptext);
+
+  int offset = 0;
+
+  for (int i = 0; i < KEYSIZE; i++) { // get Ks
+    ((uint8_t*)(Ks))[i] = decryptext[i];
+  }
+  offset += KEYSIZE;
+
+  for (int i = 0; i < LENSIZE; i++) { // get L(IDb)
+    ((uint8_t*) &LenB)[i] = decryptext[i + offset];
+  }
+  offset += LENSIZE;
+
+  // allocate mem for IDb
+  *IDb = calloc(1, LenB);
+  if (*IDb == NULL) {
+    fprintf (log,
+             "Out of Memory allocating %u bytes for IDB in MSG2_receive() "
+             "... EXITING\n", LenB);
+    fflush (log);
+    fclose (log);
+    exitError ("Out of Memory allocating IDB in MSG2_receive()");
+  }
+
+  for (int i = 0; i < LenB; i++) { // get IDb
+    *IDb[i] = decryptext[i + offset];
+  }
+  offset += LenB;
+
+  for (int i = 0; i < NONCELEN; i++) { // get Na
+    ((uint8_t*) Na)[i] = decryptext[i + offset];
+  }
+  offset += NONCELEN;
+
+  // get L(Tkt)
+  for (int i = 0; i < LENSIZE; i++) {
+    ((uint8_t *) lenTktCipher)[i] = decryptext[i + offset];
+  }
+  offset += LENSIZE;
+
+  // allocate mem for Tkt
+
+  // get Tkt
 }
 
 //-----------------------------------------------------------------------------
