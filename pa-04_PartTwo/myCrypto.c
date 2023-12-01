@@ -606,12 +606,30 @@ unsigned MSG2_new( FILE *log , uint8_t **msg2, const myKey_t *Ka , const myKey_t
     }
 
     unsigned LenA = strlen(IDa) + 1, LenB = strlen(IDb) + 1; 
-    unsigned LenMsg2 = 0;
+    unsigned LenTktPlain = 0, LenMsg2Plain = 0; 
+    unsigned LenMsg2 = 0, LenMsg2Cipher = 0, LenTktCipher = 0;
+    int offset = 0;
 
     //---------------------------------------------------------------------------------------
     // Construct TktPlain = { Ks  || L(IDa)  || IDa }
     // in the global scratch buffer plaintext[]
 
+    memset(plaintext, 0, PLAINTEXT_LEN_MAX);
+
+    for (int i = 0; i < KEYSIZE; i++) { // key
+      plaintext[i] = ((uint8_t*) Ks)[i];
+    }
+    offset += KEYSIZE;
+
+    for (int i = 0; i < LENSIZE; i++) { // IDa len
+      plaintext[i + offset] = ((uint8_t*) &LenA)[i];
+    }
+    offset += LENSIZE;
+
+    for (int i = 0; i < LenA; i++) {   // IDa
+      plaintext[i + offset] = ((uint8_t*) IDa)[i];
+    }
+    LenTktPlain = offset + LenA;
 
 
     // Use that global array as a scratch buffer for building the plaintext of the ticket
@@ -619,31 +637,83 @@ unsigned MSG2_new( FILE *log , uint8_t **msg2, const myKey_t *Ka , const myKey_t
 
     // Now, set TktCipher = encrypt( Kb , plaintext );
     // Store the result in the global scratch buffer ciphertext[]
+    memset(ciphertext, 0, CIPHER_LEN_MAX);
+
+    LenTktCipher = encrypt(plaintext, LenTktPlain, Kb->key, Kb->iv, ciphertext);
 
     //---------------------------------------------------------------------------------------
     // Construct the rest of Message 2 then encrypt it using Ka
     // MSG2 plain = {  Ks || L(IDb) || IDb  ||  Na || L(TktCipher) || TktCipher }
 
-    // Fill in Msg2 Plaintext:  Ks || L(IDb) || IDb  || L(Na) || Na || lenTktCipher) || TktCipher
+    // Fill in Msg2 Plaintext:  Ks || L(IDb) || IDb  || L(Na) || Na || L(TktCipher) || TktCipher
     // Reuse that global array plaintext[] as a scratch buffer for building the plaintext of the MSG2
+
+    memset(plaintext, 0, PLAINTEXT_LEN_MAX);
+    offset = 0;
+
+    for (int i = 0; i < KEYSIZE; i++) {
+      plaintext[i] = ((uint8_t*) Ks)[i];
+    }
+    offset += KEYSIZE;
+
+    for (int i = 0; i < LENSIZE; i++) {
+      plaintext[i + offset] = ((uint8_t*) &LenB)[i];
+    }
+    offset += LENSIZE;
+
+    for (int i = 0; i < LenB; i++) {
+      plaintext[i + offset] = ((uint8_t*) IDb)[i];
+    }
+    offset += LenB;
+
+    for (int i = 0; i < NONCELEN; i++) {
+      plaintext[i + offset] = ((uint8_t*) Na)[i];
+    }
+    offset += NONCELEN;
+
+    for (int i = 0; i < LENSIZE; i++) {
+      plaintext[i + offset] = ((uint8_t*) LenTktCipher)[i];
+    }
+    offset += LENSIZE;
+
+    for (int i = 0; i < LenTktCipher; i++) {
+      plaintext[i + offset] = ((uint8_t*) ciphertext)[i];
+    }
+    LenMsg2Plain = offset + LenTktCipher;
 
     // Now, encrypt Message 2 using Ka. 
     // Use the global scratch buffer ciphertext2[] to collect the results
+    memset(ciphertext2, 0, CIPHER_LEN_MAX);
 
-    fprintf( log ,"This is the new MSG2 ( %u Bytes ) before Encryption:\n" , ..... );  
-    fprintf( log ,"    Ks { key + IV } (%lu Bytes) is:\n" , .....  );
-    BIO_dump_indent_fp ( log , ..... ) ;  fprintf( log , "\n") ; 
+    LenMsg2Cipher = encrypt(plaintext, LenMsg2Plain, Ka->key, Ka->iv, ciphertext2);
 
-    fprintf( log ,"    IDb (%u Bytes) is:\n" , ..... );
-    BIO_dump_indent_fp ( log , ..... ) ;  fprintf( log , "\n") ; 
+    fprintf( log ,"This is the new MSG2 ( %u Bytes ) before Encryption:\n" , LenMsg2Plain );  
+    fprintf( log ,"    Ks { key + IV } (%lu Bytes) is:\n" , KEYSIZE  );
+    BIO_dump_indent_fp ( log , Ks , KEYSIZE , 4 ) ;  fprintf( log , "\n") ; 
+
+    fprintf( log ,"    IDb (%u Bytes) is:\n" , LenB );
+    BIO_dump_indent_fp ( log , IDb , LenB , 4) ;  fprintf( log , "\n") ; 
 
     fprintf( log ,"    Na (%lu Bytes) is:\n" , NONCELEN);
-    BIO_dump_indent_fp ( log , (..... ) ;  fprintf( log , "\n") ; 
+    BIO_dump_indent_fp ( log , Na , NONCELEN, 4 ) ;  fprintf( log , "\n") ; 
 
-    fprintf( log ,"    Encrypted Ticket (%u Bytes) is\n" , ..... );
-    BIO_dump_indent_fp ( log , ..... ) ;  fprintf( log , "\n") ; 
+    fprintf( log ,"    Encrypted Ticket (%u Bytes) is\n" , LenTktCipher );
+    BIO_dump_indent_fp ( log , ciphertext , LenTktCipher , 4 ) ;  fprintf( log , "\n") ; 
 
     // Copy the encrypted ciphertext to Caller's msg2 buffer.
+    LenMsg2 = LenMsg2Cipher + LENSIZE;
+    *msg2 = calloc(1, LenMsg2);
+    if (*msg2 == NULL) {
+      exitError("MSG2_new: Calloc failed");
+    }
+
+    for (int i = 0; i < LENSIZE; i++) {
+      *msg2[i] = ((uint8_t*) LenMsg2)[i];
+    }
+
+    for (int i = 0; i < LenMsg2Cipher; i++) {
+      *msg2[i + LENSIZE] = ((uint8_t*) ciphertext2)[i];
+    }
 
     fprintf( log , "The following new Encrypted MSG2 ( %u bytes ) has been"
                    " created by MSG2_new():  \n" , LenMsg2 ) ;
