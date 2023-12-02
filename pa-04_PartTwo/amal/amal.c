@@ -127,7 +127,7 @@ int main ( int argc , char * argv[] )
     // Send MSG1 to KDC via the appropriate pipe
     write(fd_A2K, msg1, LenMsg1);
 
-   fprintf( log , "Amal sent message 1 ( %d bytes ) to the KDC with:\n    "
+    fprintf( log , "Amal sent message 1 ( %d bytes ) to the KDC with:\n    "
                    "IDa ='%s'\n    "
                    "IDb = '%s'\n" , LenMsg1 , IDa , IDb ) ;
     fprintf( log , "    Na ( %lu Bytes ) is:\n" , NONCELEN ) ;

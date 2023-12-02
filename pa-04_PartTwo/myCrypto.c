@@ -620,6 +620,8 @@ unsigned MSG2_new( FILE *log , uint8_t **msg2, const myKey_t *Ka , const myKey_t
     }
     LenTktPlain = offset + LenA;
 
+    fprintf( log ,"Plaintext Ticket (%u Bytes) is\n" , LenTktPlain );  
+    BIO_dump_indent_fp ( log , plaintext , LenTktPlain , 4 ) ;  fprintf( log , "\n") ; 
 
     // Use that global array as a scratch buffer for building the plaintext of the ticket
     // Compute its encrypted version in the global scratch buffer ciphertext[]
@@ -802,8 +804,21 @@ void MSG2_receive( FILE *log , int fd , const myKey_t *Ka , myKey_t *Ks, char **
   offset += LENSIZE;
 
   // allocate mem for Tkt
+  *tktCipher = calloc(1, *lenTktCipher);
+  if (*tktCipher == NULL) {
+    fprintf (log,
+             "Out of Memory allocating %u bytes for Ticket in MSG2_receive() "
+             "... EXITING\n", LenB);
+    fflush (log);
+    fclose (log);
+    exitError ("Out of Memory allocating Ticket in MSG2_receive()");
+  }
 
   // get Tkt
+  for (int i = 0; i < *lenTktCipher; i++) {
+    *tktCipher[i] = decryptext[i + offset];
+  }
+  offset += *lenTktCipher;
 }
 
 //-----------------------------------------------------------------------------
