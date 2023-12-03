@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------
-PA-04:  Part One Intro to Enhanced Needham-Schroeder Key-Exchange with TWO-way Authentication
+PA-04:  Part Two Intro to Enhanced Needham-Schroeder Key-Exchange with TWO-way Authentication
 
 FILE:   basim.c     SKELETON
 

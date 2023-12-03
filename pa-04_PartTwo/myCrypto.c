@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------
 My Cryptographic Library
 
-FILE:   myCrypto.c     SKELETON
+FILE:   myCrypto.c
 
 Written By: 
      1- Hudson Shaeffer
@@ -663,7 +663,7 @@ unsigned MSG2_new( FILE *log , uint8_t **msg2, const myKey_t *Ka , const myKey_t
     offset += NONCELEN;
 
     for (int i = 0; i < LENSIZE; i++) {
-      plaintext[i + offset] = ((uint8_t*) LenTktCipher)[i];
+      plaintext[i + offset] = ((uint8_t*) &LenTktCipher)[i];
     }
     offset += LENSIZE;
 
@@ -699,7 +699,7 @@ unsigned MSG2_new( FILE *log , uint8_t **msg2, const myKey_t *Ka , const myKey_t
     }
 
     for (int i = 0; i < LENSIZE; i++) {
-      *msg2[i] = ((uint8_t*) LenMsg2Cipher)[i];
+      *msg2[i] = ((uint8_t*) &LenMsg2Cipher)[i];
     }
 
     for (int i = 0; i < LenMsg2Cipher; i++) {
@@ -739,7 +739,7 @@ void MSG2_receive( FILE *log , int fd , const myKey_t *Ka , myKey_t *Ks, char **
             "in MSG2_receive() ... EXITING\n", LENSIZE);
 
     fflush(log);
-    close(log);
+    fclose(log);
     exitError("Unable to receive all bytes LenMsg2 in MSG2_receive()");
   }
   LenMsg2 += LENSIZE;
@@ -749,10 +749,10 @@ void MSG2_receive( FILE *log , int fd , const myKey_t *Ka , myKey_t *Ks, char **
   if (read(fd, ciphertext, LenMsg2Cipher) < 0)
   {
     fprintf(log,
-            "Unable to receive all %lu bytes of MSG2 "
+            "Unable to receive all %u bytes of MSG2 "
             "in MSG2_receive() ... EXITING\n", LenMsg2Cipher);
     fflush(log);
-    close(log);
+    fclose(log);
     exitError("Unable to receive all bytes Encrypted Msg2 in MSG2_receive()");
   }
   LenMsg2 += LenMsg2Cipher;
