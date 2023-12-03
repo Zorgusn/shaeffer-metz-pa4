@@ -897,26 +897,25 @@ MSG3_new (FILE *log, uint8_t **msg3, const unsigned lenTktCipher,
       exitError ("MSG3_new: Invalid parameters passed");
     }
 
-  unsigned lenMsg3 = LENSIZE + lenTktCipher + NONCELEN;
+  unsigned LenMsg3 = LENSIZE + lenTktCipher + NONCELEN;
   int offset = 0;
   uint8_t *p;
 
   // Allocate memory for msg1. MUST always check malloc() did not fail
-  *msg3 = calloc (1, lenMsg3);
+  *msg3 = calloc (1, LenMsg3);
   if (*msg3 == NULL)
     {
       exitError ("MSG3_new: Calloc failed");
     }
 
-  p = *msg;
+  p = *msg3;
 
   p[0] = lenTktCipher;
-  memcpy(&p[0], (uint8_t *)&lenTktCipher, LENSIZE);
+  memcpy (&p[0], (uint8_t *)&lenTktCipher, LENSIZE);
   offset += LENSIZE;
-  memcpy(&p[offset], tktCipher, lenTktCipher);
+  memcpy (&p[offset], tktCipher, lenTktCipher);
   offset += lenTktCipher;
-  memcpy(&p[offset], (uint8_t *)Na2, NONCELEN);
-
+  memcpy (&p[offset], (uint8_t *)Na2, NONCELEN);
 
   fprintf (log,
            "The following new MSG3 ( %u bytes ) has been created by "
@@ -940,16 +939,81 @@ void
 MSG3_receive (FILE *log, int fd, const myKey_t *Kb, myKey_t *Ks, char **IDa,
               Nonce_t *Na2)
 {
+  if (log == NULL || fd == 0 || Kb == NULL || Ks == NULL || IDa == NULL
+      || Na2 == NULL)
+    {
+      exitError ("MSG3_recieve: Invalid Parameters passed");
+    }
+  unsigned int lenTktCipher = 0, lenMsg3 = 0;
+  if (read (fd, &lenTktCipher, LENSIZE) < 0)
+    {
+      fprintf (log,
+               "Unable to receive all %lu bytes of Len(TktCipher) "
+               "in MSG3_receive() ... EXITING\n",
+               LENSIZE);
+
+      fflush (log);
+      fclose (log);
+      exitError ("Unable to receive all bytes lenTktCipher in MSG3_receive()");
+    }
+  lenMsg3 += LENSIZE;
+
+  memset (ciphertext, 0, CIPHER_LEN_MAX);
+
+  if (read (fd, ciphertext, lenTktCipher) < 0)
+    {
+      fprintf (log,
+               "Unable to receive all %u bytes of MSG3 "
+               "in MSG3_receive() ... EXITING\n",
+               lenTktCipher);
+      fflush (log);
+      fclose (log);
+      exitError (
+          "Unable to receive all bytes Encrypted Msg3 in MSG3_receive()");
+    }
+  lenMsg3 += lenTktCipher;
+
+  if (read (fd, Na2, NONCELEN) < 0)
+    {
+      fprintf (log,
+               "Unable to receive all %u bytes of Na2 "
+               "in MSG3_receive() ... EXITING\n",
+               lenTktCipher);
+      fflush (log);
+      fclose (log);
+      exitError ("Unable to receive all bytes Na2 in MSG3_receive()");
+    }
+  lenMsg3 += NONCELEN;
+
+  // Decrypt
+  memset (decryptext, 0, DECRYPTED_LEN_MAX);
+
+  unsigned int lenTktPlain = decrypt (ciphertext, lenTktCipher, Kb->key, Kb->iv, decryptext);
+  // Handle ticket
+  unsigned int offset = 0;
+  memcpy (Ks, decryptext, KEYSIZE);
+  offset += KEYSIZE;
+
+  unsigned int lenA = 0;
+  memcpy (&lenA, &decryptext[offset], LENSIZE);
+
+  *IDa = calloc (1, lenA);
+  if (*IDa == NULL)
+    {
+      exitError ("MSG3_receive: Calloc failed");
+    }
+
+  memcpy(*IDa, &decryptext[offset], lenA);
 
   fprintf (log,
            "The following Encrypted TktCipher ( %d bytes ) was received by "
            "MSG3_receive()\n",
-           ....);
+           lenTktCipher);
 
   fprintf (log,
            "Here is the Decrypted Ticket ( %d bytes ) in MSG3_receive():\n",
            lenTktPlain);
-  BIO_dump_indent_fp (log, decryptext, .....);
+  BIO_dump_indent_fp (log, decryptext, lenTktPlain, 4);
   fprintf (log, "\n");
   fflush (log);
 }
