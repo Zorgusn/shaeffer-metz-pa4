@@ -988,7 +988,8 @@ MSG3_receive (FILE *log, int fd, const myKey_t *Kb, myKey_t *Ks, char **IDa,
   // Decrypt
   memset (decryptext, 0, DECRYPTED_LEN_MAX);
 
-  unsigned int lenTktPlain = decrypt (ciphertext, lenTktCipher, Kb->key, Kb->iv, decryptext);
+  unsigned int lenTktPlain
+      = decrypt (ciphertext, lenTktCipher, Kb->key, Kb->iv, decryptext);
   // Handle ticket
   unsigned int offset = 0;
   memcpy (Ks, decryptext, KEYSIZE);
@@ -1003,7 +1004,7 @@ MSG3_receive (FILE *log, int fd, const myKey_t *Kb, myKey_t *Ks, char **IDa,
       exitError ("MSG3_receive: Calloc failed");
     }
 
-  memcpy(*IDa, &decryptext[offset], lenA);
+  memcpy (*IDa, &decryptext[offset], lenA);
 
   fprintf (log,
            "The following Encrypted TktCipher ( %d bytes ) was received by "
@@ -1030,25 +1031,37 @@ unsigned
 MSG4_new (FILE *log, uint8_t **msg4, const myKey_t *Ks, Nonce_t *fNa2,
           Nonce_t *Nb)
 {
+  if (log == NULL || msg4 == NULL || Ks == NULL || fNa2 == NULL || Nb == NULL)
+    {
+      exitError ("MSG4_new: Invalid parameters passed");
+    }
 
   // Construct MSG4 Plaintext = { f(Na2)  ||  Nb }
   // Use the global scratch buffer plaintext[] for MSG4 plaintext and fill it
   // in with component values
-
+  unsigned lenPlain =  NONCELEN + NONCELEN;
+  memset(plaintext, 0, PLAINTEXT_LEN_MAX);
+  memcpy(plaintext, fNa2, NONCELEN);
+  memcpy(&plaintext[NONCELEN], Nb, NONCELEN);
   // Now, encrypt MSG4 plaintext using the session key Ks;
   // Use the global scratch buffer ciphertext[] to collect the result. Make
   // sure it fits.
-
+  unsigned lenCipher = encrypt(plaintext, lenPlain, Ks->key, Ks->iv, ciphertext);
   // Now allocate a buffer for the caller, and copy the encrypted MSG4 to it
-  *msg4 = malloc (....);
+  // unsigned lenMsg4 = LENSIZE + lenCipher;
+  unsigned lenMsg4 = lenCipher;
+  *msg4 = calloc (1, lenMsg4);
+  // memcpy(*msg4, &lenCipher, LENSIZE);
+  memcpy(*msg4, ciphertext, lenCipher );
 
   fprintf (log,
            "The following new Encrypted MSG4 ( %u bytes ) has been"
            " created by MSG4_new ():  \n",
-           LenMsg4);
-  BIO_dump_indent_fp (log, *msg4, LenMsg4, 4);
+           lenMsg4);
+  BIO_dump_indent_fp (log, *msg4, lenMsg4, 4);
   fprintf (log, "\n");
   fflush (log);
+  return lenCipher;
 }
 
 //-----------------------------------------------------------------------------
