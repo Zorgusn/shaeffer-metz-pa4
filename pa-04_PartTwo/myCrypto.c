@@ -1225,5 +1225,5 @@ fNonce (Nonce_t r, Nonce_t n)
 {
   // Note that the nonces are store in Big-Endian byte order
   // This affects how you do arithmetice on the noces, e.g. when you add 1
-  *r = (*n + 1) % (2 ** NONCELEN);
+  *r = (*n + 1) % (2 << NONCELEN);
 }
