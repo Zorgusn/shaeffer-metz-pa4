@@ -151,7 +151,7 @@ int main ( int argc , char * argv[] )
     // send it
 
     write(fd_K2A, msg2, LenMsg2);
-    fprintf(log, "The KDC sent the above Encrypted MSG2 ( %u bytes ) Successfully\n", LenMsg2 - 4); //HARDCODED MAYBE FIX THIS
+    fprintf(log, "The KDC sent the above Encrypted MSG2 ( %lu bytes ) Successfully\n", LenMsg2 - LENSIZE); //HARDCODED MAYBE FIX THIS
 
     //*************************************   
     // Final Clean-Up
