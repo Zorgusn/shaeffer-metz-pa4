@@ -1093,9 +1093,9 @@ MSG4_receive (FILE *log, int fd, const myKey_t *Ks, Nonce_t *rcvd_fNa2,
   if (read (fd, ciphertext, lenCipher) < 0)
     {
       fprintf (log,
-               "Unable to receive all %lu bytes of Cipher "
+               "Unable to receive all %u bytes of Cipher "
                "in MSG4_receive() ... EXITING\n",
-               LENSIZE);
+               lenCipher);
 
       fflush (log);
       fclose (log);
@@ -1110,7 +1110,8 @@ MSG4_receive (FILE *log, int fd, const myKey_t *Ks, Nonce_t *rcvd_fNa2,
   memcpy (Nb, &decryptext[NONCELEN], NONCELEN);
 
   fprintf (log, "The following Encrypted MSG4 ( %u bytes ) was received:\n",
-           lenDecr);
+           lenCipher);
+  BIO_dump_indent_fp (log, ciphertext, lenCipher, 4);
 }
 
 //-----------------------------------------------------------------------------
@@ -1123,25 +1124,38 @@ MSG4_receive (FILE *log, int fd, const myKey_t *Ks, Nonce_t *rcvd_fNa2,
 unsigned
 MSG5_new (FILE *log, uint8_t **msg5, const myKey_t *Ks, Nonce_t *fNb)
 {
+  if (log == NULL || msg5 == NULL || Ks == NULL || fNb == NULL)
+    {
+      exitError ("MSG5_new: Invalid parameters passed");
+    }
 
   // Construct MSG5 Plaintext  = {  f(Nb)  }
   // Use the global scratch buffer plaintext[] for MSG5 plaintext. Make sure it
   // fits
-
+  unsigned lenPlain = NONCELEN;
+  memset (plaintext, 0, PLAINTEXT_LEN_MAX);
+  memcpy (plaintext, fNb, NONCELEN);
   // Now, encrypt( Ks , {plaintext} );
   // Use the global scratch buffer ciphertext[] to collect result. Make sure it
   // fits.
-
+  memset (ciphertext, 0, CIPHER_LEN_MAX);
+  unsigned lenCipher
+      = encrypt (plaintext, lenPlain, Ks->key, Ks->iv, ciphertext);
   // Now allocate a buffer for the caller, and copy the encrypted MSG5 to it
-  *msg5 = malloc (...);
+  unsigned lenMsg5 = LENSIZE + lenCipher;
+  *msg5 = calloc (1, lenMsg5);
+
+  memcpy (*msg5, &lenCipher, LENSIZE);
+  memcpy (&(*msg5)[LENSIZE], ciphertext, lenCipher);
 
   fprintf (log,
            "The following new Encrypted MSG5 ( %u bytes ) has been"
            " created by MSG5_new ():  \n",
-           LenMSG5cipher);
-  BIO_dump_indent_fp (log, *msg5, LenMSG5cipher, 4);
+           lenCipher);
+  BIO_dump_indent_fp (log, *msg5, lenCipher, 4);
   fprintf (log, "\n");
   fflush (log);
+  return lenMsg5;
 }
 
 //-----------------------------------------------------------------------------
@@ -1151,21 +1165,54 @@ MSG5_new (FILE *log, uint8_t **msg5, const myKey_t *Ks, Nonce_t *fNb)
 void
 MSG5_receive (FILE *log, int fd, const myKey_t *Ks, Nonce_t *fNb)
 {
-
+  if (log == NULL || fd == 0 || Ks == NULL || fNb == NULL)
+    {
+      exitError ("MSG5_recieve: Invalid Parameters passed");
+    }
   // Read Len( Msg5 ) followed by reading Msg5 itself
   // Always make sure read() and write() succeed
   // Use the global scratch buffer ciphertext[] to receive encrypted MSG5.
   // Make sure it fits.
+  unsigned int lenCipher = 0;
+  if (read (fd, &lenCipher, LENSIZE) < 0)
+    {
+      fprintf (log,
+               "Unable to receive all %lu bytes of Len(Cipher) "
+               "in MSG5_receive() ... EXITING\n",
+               LENSIZE);
 
-  fprintf (log,
-           "The following Encrypted MSG5 ( %u bytes ) has been received:\n",
-           LenMSG5cipher);
+      fflush (log);
+      fclose (log);
+      exitError ("Unable to receive all bytes lenCipher in MSG5_receive()");
+    }
+  memset (ciphertext, 0, CIPHER_LEN_MAX);
+  if (read (fd, ciphertext, lenCipher) < 0)
+    {
+      fprintf (log,
+               "Unable to receive all %u bytes of Cipher "
+               "in MSG5_receive() ... EXITING\n",
+               lenCipher);
 
+      fflush (log);
+      fclose (log);
+      exitError ("Unable to receive all bytes Cipher in MSG5_receive()");
+    }
+
+  memset (decryptext, 0, DECRYPTED_LEN_MAX);
+  unsigned lenDecr
+      = decrypt (ciphertext, lenCipher, Ks->key, Ks->iv, decryptext);
+
+  memcpy (fNb, decryptext, NONCELEN);
   // Now, Decrypt MSG5 using Ks
   // Use the global scratch buffer decryptext[] to collect the results of
   // decryption Make sure it fits
 
   // Parse MSG5 into its components f( Nb )
+
+  fprintf (log,
+           "The following Encrypted MSG5 ( %u bytes ) has been received:\n",
+           lenCipher);
+  BIO_dump_indent_fp (log, ciphertext, lenCipher, 4);
 }
 
 //-----------------------------------------------------------------------------
@@ -1178,4 +1225,5 @@ fNonce (Nonce_t r, Nonce_t n)
 {
   // Note that the nonces are store in Big-Endian byte order
   // This affects how you do arithmetice on the noces, e.g. when you add 1
+  *r = (*n + 1) % (2 ** NONCELEN);
 }
