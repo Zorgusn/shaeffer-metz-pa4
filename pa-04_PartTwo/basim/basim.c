@@ -99,7 +99,7 @@ main (int argc, char *argv[])
   BIO_dump_indent_fp (log, &Kb.iv, 16, 4);
   // Get Basim's pre-created Nonces: Nb
   Nonce_t Nb;
-  getNonce4Basim(1, Nb);
+  getNonce4Basim (1, Nb);
 
   // Use getNonce4Basim () to get Basim's 1st and only nonce into Nb
   fprintf (log, "Basim will use this Nonce:  Nb\n");
@@ -116,7 +116,16 @@ main (int argc, char *argv[])
   BANNER (log);
   fprintf (log, "         MSG3 Receive\n");
   BANNER (log);
-
+  char *IDa;
+  myKey_t Ks;
+  Nonce_t Na2;
+  MSG3_receive (log, fd_A2B, &Kb, &Ks, &IDa, &Na2);
+  fprintf (log, "\nBasim received Message 3 from Amal with the following:\n");
+  fprintf (log, "    Ks { Key , IV } (48 Bytes ) is:\n");
+  BIO_dump_indent_fp (log, Ks, KEYSIZE, 4);
+  fprintf (log, "    IDa = '%s'\n", IDa);
+  fprintf (log, "    Na2 ( 4 Bytes ) is:\n");
+  BIO_dump_indent_fp (log, Na2, NONCELEN, 4);
   //*************************************
   // Construct & Send    Message 4
   //*************************************
@@ -124,7 +133,18 @@ main (int argc, char *argv[])
   BANNER (log);
   fprintf (log, "         MSG4 New\n");
   BANNER (log);
+  Nonce_t fNa2;
+  fNonce (fNa2, Na2);
+  uint8_t *msg4;
+  fprintf (log, "Basim is sending this f( Na2 ) in MSG4:\n");
+  BIO_dump_indent_fp (log, fNa2, NONCELEN, 4);
 
+  fprintf (log, "\nBasim is sending this Nb in MSG4:\n");
+  BIO_dump_indent_fp (log, Nb, NONCELEN, 4);
+
+  unsigned msg4Len = MSG4_new (log, &msg4, &Ks, &fNa2, &Nb);
+  write(fd_B2A, msg4, msg4Len);
+  fprintf ("Basim Sent the above MSG4 to Amal\n\n");
   //*************************************
   // Receive   & Process Message 5
   //*************************************
@@ -132,12 +152,22 @@ main (int argc, char *argv[])
   BANNER (log);
   fprintf (log, "         MSG5 Receive\n");
   BANNER (log);
+  Nonce_t fNb;
+  fNonce (fNb, Nb);
+  fprintf (log, "Basim is expecting back this f( Nb ) in MSG5:\n");
+  BIO_dump_indent_fp (log, fNb, NONCELEN, 4);
+  fprintf (log, "\n");
+  Nonce_t fNb_amal;
+  MSG5_receive(log, fd_A2B, &Ks, &fNb_amal);
+
+  fprintf(log, "\nBasim received Message 5 from Amal with this f( Nb ): >>>> VALID\n");
+  BIO_dump_indent_fp (log, fNb_amal, NONCELEN, 4);
 
   //*************************************
   // Final Clean-Up
   //*************************************
 
-  fprintf (log, "\nBasim has terminated normally. Goodbye\n");
+  fprintf (log, "\n\nBasim has terminated normally. Goodbye\n");
   fclose (log);
 
   return 0;
