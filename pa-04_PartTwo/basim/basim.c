@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------------
 PA-04:  Part Two Intro to Enhanced Needham-Schroeder Key-Exchange with TWO-way Authentication
 
-FILE:   basim.c     SKELETON
+FILE:   basim.c
 
 Written By: 
      1- Zane Metz

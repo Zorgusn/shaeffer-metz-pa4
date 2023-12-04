@@ -1039,25 +1039,26 @@ MSG4_new (FILE *log, uint8_t **msg4, const myKey_t *Ks, Nonce_t *fNa2,
   // Construct MSG4 Plaintext = { f(Na2)  ||  Nb }
   // Use the global scratch buffer plaintext[] for MSG4 plaintext and fill it
   // in with component values
-  unsigned lenPlain =  NONCELEN + NONCELEN;
-  memset(plaintext, 0, PLAINTEXT_LEN_MAX);
-  memcpy(plaintext, fNa2, NONCELEN);
-  memcpy(&plaintext[NONCELEN], Nb, NONCELEN);
+  unsigned lenPlain = NONCELEN + NONCELEN;
+  memset (plaintext, 0, PLAINTEXT_LEN_MAX);
+  memcpy (plaintext, fNa2, NONCELEN);
+  memcpy (&plaintext[NONCELEN], Nb, NONCELEN);
   // Now, encrypt MSG4 plaintext using the session key Ks;
   // Use the global scratch buffer ciphertext[] to collect the result. Make
   // sure it fits.
-  unsigned lenCipher = encrypt(plaintext, lenPlain, Ks->key, Ks->iv, ciphertext);
+  unsigned lenCipher
+      = encrypt (plaintext, lenPlain, Ks->key, Ks->iv, ciphertext);
   // Now allocate a buffer for the caller, and copy the encrypted MSG4 to it
-  // unsigned lenMsg4 = LENSIZE + lenCipher;
-  unsigned lenMsg4 = lenCipher;
+  unsigned lenMsg4 = LENSIZE + lenCipher;
+  // unsigned lenMsg4 = lenCipher;
   *msg4 = calloc (1, lenMsg4);
-  // memcpy(*msg4, &lenCipher, LENSIZE);
-  memcpy(*msg4, ciphertext, lenCipher );
+  memcpy (*msg4, &lenCipher, LENSIZE);
+  memcpy (&(*msg4)[LENSIZE], ciphertext, lenCipher);
 
   fprintf (log,
            "The following new Encrypted MSG4 ( %u bytes ) has been"
            " created by MSG4_new ():  \n",
-           lenMsg4);
+           lenMsg4); // msg4 or cipher len?
   BIO_dump_indent_fp (log, *msg4, lenMsg4, 4);
   fprintf (log, "\n");
   fflush (log);
@@ -1072,9 +1073,44 @@ void
 MSG4_receive (FILE *log, int fd, const myKey_t *Ks, Nonce_t *rcvd_fNa2,
               Nonce_t *Nb)
 {
+  if (log == NULL || fd == 0 || Ks == NULL || rcvd_fNa2 == NULL || Nb == NULL)
+    {
+      exitError ("MSG4_recieve: Invalid Parameters passed");
+    }
+  unsigned int lenCipher = 0;
+  if (read (fd, &lenCipher, LENSIZE) < 0)
+    {
+      fprintf (log,
+               "Unable to receive all %lu bytes of Len(Cipher) "
+               "in MSG4_receive() ... EXITING\n",
+               LENSIZE);
+
+      fflush (log);
+      fclose (log);
+      exitError ("Unable to receive all bytes lenCipher in MSG4_receive()");
+    }
+  memset (ciphertext, 0, CIPHER_LEN_MAX);
+  if (read (fd, ciphertext, lenCipher) < 0)
+    {
+      fprintf (log,
+               "Unable to receive all %lu bytes of Cipher "
+               "in MSG4_receive() ... EXITING\n",
+               LENSIZE);
+
+      fflush (log);
+      fclose (log);
+      exitError ("Unable to receive all bytes Cipher in MSG4_receive()");
+    }
+
+  memset (decryptext, 0, DECRYPTED_LEN_MAX);
+  unsigned lenDecr
+      = decrypt (ciphertext, lenCipher, Ks->key, Ks->iv, decryptext);
+
+  memcpy (rcvd_fNa2, decryptext, NONCELEN);
+  memcpy (Nb, &decryptext[NONCELEN], NONCELEN);
 
   fprintf (log, "The following Encrypted MSG4 ( %u bytes ) was received:\n",
-           ...);
+           lenDecr);
 }
 
 //-----------------------------------------------------------------------------
