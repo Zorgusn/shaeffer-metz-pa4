@@ -59,8 +59,8 @@ main (int argc, char *argv[])
       exit (-1);
     }
 
-  fd_A2B = argv[1]; // Read from Amal   File Descriptor
-  fd_B2A = argv[2]; // Send to   Amal   File Descriptor
+  fd_A2B = atoi(argv[1]); // Read from Amal   File Descriptor
+  fd_B2A = atoi(argv[2]); // Send to   Amal   File Descriptor
 
   log = fopen ("basim/logBasim.txt", "w");
   if (!log)
@@ -102,7 +102,7 @@ main (int argc, char *argv[])
   getNonce4Basim (1, Nb);
 
   // Use getNonce4Basim () to get Basim's 1st and only nonce into Nb
-  fprintf (log, "Basim will use this Nonce:  Nb\n");
+  fprintf (log, "\nBasim will use this Nonce:  Nb\n");
   // BIO_dump Nb indented 4 spaces to the righ
   BIO_dump_indent_fp (log, Nb, NONCELEN, 4);
   fprintf (log, "\n");
@@ -120,10 +120,10 @@ main (int argc, char *argv[])
   myKey_t Ks;
   Nonce_t Na2;
   MSG3_receive (log, fd_A2B, &Kb, &Ks, &IDa, &Na2);
-  fprintf (log, "\nBasim received Message 3 from Amal with the following:\n");
+  fprintf (log, "Basim received Message 3 from Amal with the following:\n");
   fprintf (log, "    Ks { Key , IV } (48 Bytes ) is:\n");
-  BIO_dump_indent_fp (log, Ks, KEYSIZE, 4);
-  fprintf (log, "    IDa = '%s'\n", IDa);
+  BIO_dump_indent_fp (log, &Ks, KEYSIZE, 4);
+  fprintf (log, "\n    IDa = \'%s\'\n", IDa);
   fprintf (log, "    Na2 ( 4 Bytes ) is:\n");
   BIO_dump_indent_fp (log, Na2, NONCELEN, 4);
   //*************************************
@@ -141,10 +141,10 @@ main (int argc, char *argv[])
 
   fprintf (log, "\nBasim is sending this Nb in MSG4:\n");
   BIO_dump_indent_fp (log, Nb, NONCELEN, 4);
-
+  fprintf(log, "\n");
   unsigned msg4Len = MSG4_new (log, &msg4, &Ks, &fNa2, &Nb);
   write(fd_B2A, msg4, msg4Len);
-  fprintf ("Basim Sent the above MSG4 to Amal\n\n");
+  fprintf (log, "Basim Sent the above MSG4 to Amal\n\n");
   //*************************************
   // Receive   & Process Message 5
   //*************************************

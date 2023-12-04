@@ -1012,7 +1012,7 @@ MSG3_receive (FILE *log, int fd, const myKey_t *Kb, myKey_t *Ks, char **IDa,
            lenTktCipher);
   BIO_dump_indent_fp (log, ciphertext, lenTktCipher, 4);
   fprintf (log,
-           "Here is the Decrypted Ticket ( %d bytes ) in MSG3_receive():\n",
+           "\nHere is the Decrypted Ticket ( %d bytes ) in MSG3_receive():\n",
            lenTktPlain);
   BIO_dump_indent_fp (log, decryptext, lenTktPlain, 4);
   fprintf (log, "\n");
