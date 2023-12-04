@@ -170,9 +170,7 @@ main (int argc, char *argv[])
 
   fprintf (log, "Amal received the following in message 2 from the KDC\n");
   fprintf (log, "    Ks { Key , IV } (%lu Bytes ) is:\n", KEYSIZE);
-  BIO_dump_indent_fp (log, &(Ks.key), SYMMETRIC_KEY_LEN, 4);
-  fprintf(log, "\n");
-  BIO_dump_indent_fp (log, &(Ks.iv), INITVECTOR_LEN, 4);
+  BIO_dump_indent_fp (log, &Ks, KEYSIZE, 4);
   fprintf(log, "\n");
   fprintf (log, "    IDb (%lu Bytes):   ..... MATCH\n", strlen (IDb_msg2));
   BIO_dump_indent_fp (log, IDb_msg2, strlen (IDb_msg2), 4);
