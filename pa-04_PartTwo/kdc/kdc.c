@@ -159,6 +159,7 @@ int main ( int argc , char * argv[] )
     
     fprintf( log , "\nThe KDC has terminated normally. Goodbye\n" ) ;
     fclose( log ) ;  
+    free(msg2);
     free(IDa);
     free(IDb);
     return 0 ;

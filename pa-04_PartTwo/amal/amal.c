@@ -1,13 +1,13 @@
 /*----------------------------------------------------------------------------
 PA-04:  Part Two Intro to Enhanced Needham-Schroeder Key-Exchange with TWO-way Authentication
 
-FILE:   amal.c
+FILE:   amal.c     SKELETON
 
 Written By: 
      1- Hudson Shaeffer
 	 2- Zane Metz
 Submitted on: 
-     11/15/23
+     12/3/23
 ----------------------------------------------------------------------------*/
 
 #include <linux/random.h>
@@ -79,6 +79,8 @@ int main ( int argc , char * argv[] )
 
     // Get Amal's master key with the KDC
     myKey_t  Ka ;  // Amal's master key with the KDC
+
+
     // Use  getKeyFromFile( "amal/amalKey.bin" , .... ) )
 	// On failure, print "\nCould not get Amal's Masker key & IV.\n" to both  stderr and the Log file
 	// and exit(-1)
@@ -87,9 +89,9 @@ int main ( int argc , char * argv[] )
         fprintf(log, "\nCould not get Amal's Masker key & IV.\n");
         exit(-1);
     }
-    // On success, print "Amal has this Master Ka { key , IV }\n" to the Log file
+	// On success, print "Amal has this Master Ka { key , IV }\n" to the Log file
     fprintf(log, "Amal has this Master Ka { key , IV }\n");
-	// BIO_dump the Key indented 4 spaces to the righ
+	// BIO_dump the Key IV indented 4 spaces to the righ
     BIO_dump_indent_fp(log, Ka.key, SYMMETRIC_KEY_LEN, 4);
     fprintf( log , "\n" );
 	// BIO_dump the IV indented 4 spaces to the righ
@@ -147,6 +149,26 @@ int main ( int argc , char * argv[] )
     fprintf( log , "         MSG2 Receive\n");
     BANNER( log ) ;
 
+    char *IDb_msg2, *tktCipher;
+    unsigned lenTktCipher;
+    Nonce_t Na_msg2;
+    myKey_t Ks;
+
+    MSG2_receive(log, fd_K2A, &Ka, &Ks, &IDb_msg2, &Na_msg2, &lenTktCipher, &tktCipher);
+
+    fprintf(log, "Amal received the following in message 2 from the KDC");
+    fprintf(log, "    Ks { Key , IV } (%lu Bytes ) is:", KEYSIZE);
+    BIO_dump_indent_fp(log, &Ks, KEYSIZE, 4);
+    fprintf(log, "    IDb (%u Bytes):   ..... MATCH", strlen(IDb_msg2));
+    BIO_dump_indent_fp(log, IDb_msg2, strlen(IDb_msg2), 4);
+    fprintf(log, "    Received Copy of Na (%u bytes):    >>>> VALID", NONCELEN);
+    BIO_dump_indent_fp(log, Na_msg2, NONCELEN, 4);
+    fprintf(log, "    Encrypted Ticket (%u bytes):", lenTktCipher);
+    BIO_dump_indent_fp(log, tktCipher, lenTktCipher, 4);
+
+    free(IDb_msg2);
+
+
     //*************************************
     // Construct & Send    Message 3
     //*************************************
@@ -154,6 +176,19 @@ int main ( int argc , char * argv[] )
     BANNER( log ) ;
     fprintf( log , "         MSG3 New\n");
     BANNER( log ) ;
+
+    fprintf(log, "Amal is sending this nonce Na2 in Message 3:");
+    BIO_dump_indent_fp(log, Na2, NONCELEN, 4);
+
+    char *msg3;
+    unsigned LenMsg3 = MSG3_new(log, &msg3, lenTktCipher, tktCipher, &Na2);
+
+    write(fd_A2B, msg3, LenMsg3);
+
+    fprintf(log, "Amal Sent the above Message 3 ( %u bytes ) to Basim", LenMsg3);
+
+    free(tktCipher);
+    free(msg3);
 
     //*************************************
     // Receive   & Process Message 4
@@ -163,6 +198,20 @@ int main ( int argc , char * argv[] )
     fprintf( log , "         MSG4 Receive\n");
     BANNER( log ) ;
 
+    Nonce_t fNa2, fNa2_msg4, Nb;
+    fNonce(fNa2, Na2);
+
+    MSG4_receive(log, fd_B2A, &Ks, &fNa2_msg4, &Nb);
+
+    fprintf(log, "Amal is expecting back this f( Na2 ) in MSG4:");
+    BIO_dump_indent_fp(log, fNa2, NONCELEN, 4);
+
+    fprintf(log, "Basim returned the following f( Na2 )   >>>> VALID");
+    BIO_dump_indent_fp(log, fNa2_msg4, NONCELEN, 4);
+
+    fprintf(log, "Amal also received this Nb :");
+    BIO_dump_indent_fp(log, Nb, NONCELEN, 4);
+
     //*************************************
     // Construct & Send    Message 5
     //*************************************
@@ -171,6 +220,19 @@ int main ( int argc , char * argv[] )
     fprintf( log , "         MSG5 New\n");
     BANNER( log ) ;
 
+    char *msg5;
+    unsigned LenMsg5;
+    Nonce_t fNb;
+    fNonce(fNb, Nb);
+
+    fprintf(log, "Amal is sending this f( Nb ) in MSG5:");
+    BIO_dump_indent_fp(log, fNb, NONCELEN, 4);
+
+    LenMsg5 = MSG5_new(log, &msg5, &Ks, &fNb);
+
+    write(fd_A2B, msg5, LenMsg5);
+
+    free(msg5);
 
     //*************************************   
     // Final Clean-Up
