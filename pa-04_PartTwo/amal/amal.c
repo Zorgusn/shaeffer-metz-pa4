@@ -160,22 +160,23 @@ main (int argc, char *argv[])
   BANNER (log);
 
   char *IDb_msg2 = "", *tktCipher = "";
-  unsigned lenTktCipher;
+  unsigned lenTktCipher = 0;
   Nonce_t Na_msg2;
   myKey_t Ks;
 
+  fflush(log);
   MSG2_receive (log, fd_K2A, &Ka, &Ks, &IDb_msg2, &Na_msg2, &lenTktCipher,
                 (uint8_t **)&tktCipher);
 
-  fprintf (log, "Amal received the following in message 2 from the KDC");
-  fprintf (log, "    Ks { Key , IV } (%lu Bytes ) is:", KEYSIZE);
+  fprintf (log, "Amal received the following in message 2 from the KDC\n");
+  fprintf (log, "    Ks { Key , IV } (%lu Bytes ) is:\n", KEYSIZE);
   BIO_dump_indent_fp (log, &Ks, KEYSIZE, 4);
-  fprintf (log, "    IDb (%lu Bytes):   ..... MATCH", strlen (IDb_msg2));
-  BIO_dump_indent_fp (log, IDb_msg2, strlen (IDb_msg2), 4);
-  fprintf (log, "    Received Copy of Na (%lu bytes):    >>>> VALID",
+  fprintf (log, "\n    IDb (%lu Bytes):   ..... MATCH\n", strlen (IDb_msg2) + 1);
+  BIO_dump_indent_fp (log, IDb_msg2, strlen (IDb_msg2) + 1, 4);
+  fprintf (log, "\n    Received Copy of Na (%lu bytes):    >>>> VALID\n",
            NONCELEN);
   BIO_dump_indent_fp (log, Na_msg2, NONCELEN, 4);
-  fprintf (log, "    Encrypted Ticket (%u bytes):", lenTktCipher);
+  fprintf (log, "\n    Encrypted Ticket (%u bytes):\n", lenTktCipher);
   BIO_dump_indent_fp (log, tktCipher, lenTktCipher, 4);
 
   free (IDb_msg2);
