@@ -173,8 +173,8 @@ main (int argc, char *argv[])
   fprintf (log, "    Ks { Key , IV } (%lu Bytes ) is:\n", KEYSIZE);
   BIO_dump_indent_fp (log, &Ks, KEYSIZE, 4);
   fprintf(log, "\n");
-  fprintf (log, "    IDb (%lu Bytes):   ..... MATCH\n", strlen (IDb_msg2));
-  BIO_dump_indent_fp (log, IDb_msg2, strlen (IDb_msg2), 4);
+  fprintf (log, "    IDb (%lu Bytes):   ..... MATCH\n", strlen (IDb_msg2) + 1);
+  BIO_dump_indent_fp (log, IDb_msg2, strlen (IDb_msg2) + 1, 4);
   fprintf(log, "\n");
   fprintf (log, "    Received Copy of Na (%lu bytes):    >>>> VALID\n",
            NONCELEN);
@@ -208,6 +208,8 @@ main (int argc, char *argv[])
 
   fprintf (log, "Amal Sent the above Message 3 ( %u bytes ) to Basim\n",
            LenMsg3);
+  fprintf (log, "\n");
+  fflush (log);
 
   free (tktCipher);
   free (msg3);
@@ -250,10 +252,13 @@ main (int argc, char *argv[])
 
   fprintf (log, "Amal is sending this f( Nb ) in MSG5:\n");
   BIO_dump_indent_fp (log, fNb, NONCELEN, 4);
+  fprintf(log, "\n");
 
   LenMsg5 = MSG5_new (log, (uint8_t ** )&msg5, &Ks, &fNb);
 
   write (fd_A2B, msg5, LenMsg5);
+
+  fprintf(log, "Amal sent the above Message 5 ( %lu bytes ) to Basim\n", LenMsg5 - NONCELEN);
 
   free (msg5);
 

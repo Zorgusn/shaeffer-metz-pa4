@@ -119,7 +119,7 @@ decrypt (uint8_t *pCipherText, unsigned cipherText_len, const uint8_t *key,
 
   // If addition ciphertext may still be generated,
   // the pCipherText pointer must first be advanced forward
-  pCipherText += len;
+  pDecryptedText += len;
 
   // Finalize the encryption
   status = EVP_DecryptFinal_ex (ctx, pDecryptedText, &len);
@@ -1050,8 +1050,6 @@ MSG4_receive (FILE *log, int fd, const myKey_t *Ks, Nonce_t *rcvd_fNa2,
       exitError ("Unable to receive all bytes Cipher in MSG4_receive()");
     }
   memset (decryptext, 0, DECRYPTED_LEN_MAX);
-  fprintf(log, "\n\n decrypting %u bytes \n\n", lenCipher); fflush(log); //=====================================================
-  BIO_dump_fp(log, ciphertext, lenCipher); fflush(log); //======================================================================
   unsigned lenDecr
       = decrypt (ciphertext, lenCipher, Ks->key, Ks->iv, decryptext);
 
@@ -1061,6 +1059,8 @@ MSG4_receive (FILE *log, int fd, const myKey_t *Ks, Nonce_t *rcvd_fNa2,
   fprintf (log, "The following Encrypted MSG4 ( %u bytes ) was received:\n",
            lenCipher);
   BIO_dump_indent_fp (log, ciphertext, lenCipher, 4);
+  fprintf(log, "\n\n");
+  fflush(log);
 }
 
 //-----------------------------------------------------------------------------
