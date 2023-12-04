@@ -804,16 +804,10 @@ MSG2_receive (FILE *log, int fd, const myKey_t *Ka, myKey_t *Ks, char **IDb,
 
   int offset = 0;
 
-  for (int i = 0; i < KEYSIZE; i++)
-    { // get Ks
-      ((uint8_t *)(Ks))[i] = decryptext[i];
-    }
+  memcpy(Ks, decryptext, KEYSIZE);
   offset += KEYSIZE;
 
-  for (int i = 0; i < LENSIZE; i++)
-    { // get L(IDb)
-      ((uint8_t *)&LenB)[i] = decryptext[i + offset];
-    }
+  memcpy(&LenB, &decryptext[offset], LENSIZE);
   offset += LENSIZE;
 
   // allocate mem for IDb
@@ -829,23 +823,13 @@ MSG2_receive (FILE *log, int fd, const myKey_t *Ka, myKey_t *Ks, char **IDb,
       exitError ("Out of Memory allocating IDB in MSG2_receive()");
     }
 
-  for (int i = 0; i < LenB; i++)
-    { // get IDb
-      *IDb[i] = decryptext[i + offset];
-    }
+  memcpy(*IDb, &decryptext[offset], LenB);
   offset += LenB;
 
-  for (int i = 0; i < NONCELEN; i++)
-    { // get Na
-      ((uint8_t *)*Na)[i] = decryptext[i + offset];
-    }
+  memcpy(*Na, &decryptext[offset], NONCELEN);
   offset += NONCELEN;
 
-  // get L(Tkt)
-  for (int i = 0; i < LENSIZE; i++)
-    {
-      ((uint8_t *)lenTktCipher)[i] = decryptext[i + offset];
-    }
+  memcpy(lenTktCipher, &decryptext[offset], LENSIZE);
   offset += LENSIZE;
 
   // allocate mem for Tkt
@@ -856,17 +840,13 @@ MSG2_receive (FILE *log, int fd, const myKey_t *Ka, myKey_t *Ks, char **IDb,
           log,
           "Out of Memory allocating %u bytes for Ticket in MSG2_receive() "
           "... EXITING\n",
-          LenB);
+          *lenTktCipher);
       fflush (log);
       fclose (log);
       exitError ("Out of Memory allocating Ticket in MSG2_receive()");
     }
 
-  // get Tkt
-  for (int i = 0; i < *lenTktCipher; i++)
-    {
-      *tktCipher[i] = decryptext[i + offset];
-    }
+  memcpy(*tktCipher, &decryptext[offset], *lenTktCipher);
   offset += *lenTktCipher;
 }
 
@@ -1031,7 +1011,7 @@ MSG4_new (FILE *log, uint8_t **msg4, const myKey_t *Ks, Nonce_t *fNa2,
   unsigned lenPlain = NONCELEN + NONCELEN;
   memset (plaintext, 0, PLAINTEXT_LEN_MAX);
   memcpy (plaintext, *fNa2, NONCELEN);
-  memcpy (&plaintext[NONCELEN], *Nb, NONCELEN);
+  memcpy (&(plaintext[NONCELEN]), *Nb, NONCELEN);
   // Now, encrypt MSG4 plaintext using the session key Ks;
   // Use the global scratch buffer ciphertext[] to collect the result. Make
   // sure it fits.
@@ -1042,7 +1022,7 @@ MSG4_new (FILE *log, uint8_t **msg4, const myKey_t *Ks, Nonce_t *fNa2,
   // unsigned lenMsg4 = lenCipher;
   *msg4 = calloc (1, lenMsg4);
   memcpy (*msg4, &lenCipher, LENSIZE);
-  memcpy (&(*msg4)[LENSIZE], ciphertext, lenCipher);
+  memcpy (&((*msg4)[LENSIZE]), ciphertext, lenCipher);
 
   fprintf (log,
            "The following new Encrypted MSG4 ( %u bytes ) has been"
@@ -1066,7 +1046,7 @@ MSG4_receive (FILE *log, int fd, const myKey_t *Ks, Nonce_t *rcvd_fNa2,
     {
       exitError ("MSG4_recieve: Invalid Parameters passed");
     }
-  unsigned int lenCipher = 0;
+  unsigned lenCipher = 0;
   if (read (fd, &lenCipher, LENSIZE) < 0)
     {
       fprintf (log,
@@ -1090,7 +1070,6 @@ MSG4_receive (FILE *log, int fd, const myKey_t *Ks, Nonce_t *rcvd_fNa2,
       fclose (log);
       exitError ("Unable to receive all bytes Cipher in MSG4_receive()");
     }
-
   memset (decryptext, 0, DECRYPTED_LEN_MAX);
   unsigned lenDecr
       = decrypt (ciphertext, lenCipher, Ks->key, Ks->iv, decryptext);
