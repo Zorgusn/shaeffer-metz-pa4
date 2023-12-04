@@ -1010,7 +1010,7 @@ MSG3_receive (FILE *log, int fd, const myKey_t *Kb, myKey_t *Ks, char **IDa,
            "The following Encrypted TktCipher ( %d bytes ) was received by "
            "MSG3_receive()\n",
            lenTktCipher);
-
+  BIO_dump_indent_fp (log, ciphertext, lenTktCipher, 4);
   fprintf (log,
            "Here is the Decrypted Ticket ( %d bytes ) in MSG3_receive():\n",
            lenTktPlain);
@@ -1058,8 +1058,8 @@ MSG4_new (FILE *log, uint8_t **msg4, const myKey_t *Ks, Nonce_t *fNa2,
   fprintf (log,
            "The following new Encrypted MSG4 ( %u bytes ) has been"
            " created by MSG4_new ():  \n",
-           lenMsg4); // msg4 or cipher len?
-  BIO_dump_indent_fp (log, *msg4, lenMsg4, 4);
+           lenCipher); // msg4 or cipher len?
+  BIO_dump_indent_fp (log, ciphertext, lenCipher, 4);
   fprintf (log, "\n");
   fflush (log);
   return lenCipher;
@@ -1152,7 +1152,7 @@ MSG5_new (FILE *log, uint8_t **msg5, const myKey_t *Ks, Nonce_t *fNb)
            "The following new Encrypted MSG5 ( %u bytes ) has been"
            " created by MSG5_new ():  \n",
            lenCipher);
-  BIO_dump_indent_fp (log, *msg5, lenCipher, 4);
+  BIO_dump_indent_fp (log, ciphertext, lenCipher, 4);
   fprintf (log, "\n");
   fflush (log);
   return lenMsg5;
