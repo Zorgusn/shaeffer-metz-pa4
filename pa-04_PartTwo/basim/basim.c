@@ -91,7 +91,7 @@ main (int argc, char *argv[])
       fclose (log);
       exitError ("\nCould not get Basim's Masker key & IV.\n");
     }
-  fprintf (log, "Basim has this Master Ka { key , IV }\n");
+  fprintf (log, "Basim has this Master Kb { key , IV }\n");
   // BIO_dump the Key IV indented 4 spaces to the right
   BIO_dump_indent_fp (log, &Kb.key, 32, 4);
   fprintf (log, "\n");
@@ -123,9 +123,11 @@ main (int argc, char *argv[])
   fprintf (log, "Basim received Message 3 from Amal with the following:\n");
   fprintf (log, "    Ks { Key , IV } (48 Bytes ) is:\n");
   BIO_dump_indent_fp (log, &Ks, KEYSIZE, 4);
-  fprintf (log, "\n    IDa = \'%s\'\n", IDa);
+  fprintf (log, "\n    IDa = '%s'\n", IDa);
+  
   fprintf (log, "    Na2 ( 4 Bytes ) is:\n");
   BIO_dump_indent_fp (log, Na2, NONCELEN, 4);
+  fprintf(log, "\n");
   //*************************************
   // Construct & Send    Message 4
   //*************************************
@@ -139,7 +141,7 @@ main (int argc, char *argv[])
   fprintf (log, "Basim is sending this f( Na2 ) in MSG4:\n");
   BIO_dump_indent_fp (log, fNa2, NONCELEN, 4);
 
-  fprintf (log, "\nBasim is sending this Nb in MSG4:\n");
+  fprintf (log, "\nBasim is sending this nonce Nb in MSG4:\n");
   BIO_dump_indent_fp (log, Nb, NONCELEN, 4);
   fprintf(log, "\n");
   unsigned msg4Len = MSG4_new (log, &msg4, &Ks, &fNa2, &Nb);

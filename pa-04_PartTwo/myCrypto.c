@@ -997,6 +997,7 @@ MSG3_receive (FILE *log, int fd, const myKey_t *Kb, myKey_t *Ks, char **IDa,
 
   unsigned int lenA = 0;
   memcpy (&lenA, &decryptext[offset], LENSIZE);
+  offset += LENSIZE;
 
   *IDa = calloc (1, lenA);
   if (*IDa == NULL)
@@ -1005,7 +1006,6 @@ MSG3_receive (FILE *log, int fd, const myKey_t *Kb, myKey_t *Ks, char **IDa,
     }
 
   memcpy (*IDa, &decryptext[offset], lenA);
-
   fprintf (log,
            "The following Encrypted TktCipher ( %d bytes ) was received by "
            "MSG3_receive()\n",
@@ -1062,7 +1062,7 @@ MSG4_new (FILE *log, uint8_t **msg4, const myKey_t *Ks, Nonce_t *fNa2,
   BIO_dump_indent_fp (log, ciphertext, lenCipher, 4);
   fprintf (log, "\n");
   fflush (log);
-  return lenCipher;
+  return lenMsg4;
 }
 
 //-----------------------------------------------------------------------------
