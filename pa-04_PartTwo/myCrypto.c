@@ -687,7 +687,7 @@ MSG2_new (FILE *log, uint8_t **msg2, const myKey_t *Ka, const myKey_t *Kb,
 
   for (int i = 0; i < NONCELEN; i++)
     {
-      plaintext[i + offset] = ((uint8_t *)Na)[i];
+      plaintext[i + offset] = ((uint8_t *)*Na)[i];
     }
   offset += NONCELEN;
 
@@ -721,7 +721,7 @@ MSG2_new (FILE *log, uint8_t **msg2, const myKey_t *Ka, const myKey_t *Kb,
   fprintf (log, "\n");
 
   fprintf (log, "    Na (%lu Bytes) is:\n", NONCELEN);
-  BIO_dump_indent_fp (log, Na, NONCELEN, 4);
+  BIO_dump_indent_fp (log, *Na, NONCELEN, 4);
   fprintf (log, "\n");
 
   fprintf (log, "    Encrypted Ticket (%u Bytes) is\n", LenTktCipher);
@@ -848,7 +848,7 @@ MSG2_receive (FILE *log, int fd, const myKey_t *Ka, myKey_t *Ks, char **IDb,
 
   for (int i = 0; i < NONCELEN; i++)
     { // get Na
-      ((uint8_t *)Na)[i] = decryptext[i + offset];
+      ((uint8_t *)*Na)[i] = decryptext[i + offset];
     }
   offset += NONCELEN;
 
@@ -910,12 +910,12 @@ MSG3_new (FILE *log, uint8_t **msg3, const unsigned lenTktCipher,
 
   p = *msg3;
 
-  p[0] = lenTktCipher;
-  memcpy (&p[0], (uint8_t *)&lenTktCipher, LENSIZE);
+  // p[0] = lenTktCipher;
+  memcpy (&p[0], &lenTktCipher, LENSIZE);
   offset += LENSIZE;
   memcpy (&p[offset], tktCipher, lenTktCipher);
   offset += lenTktCipher;
-  memcpy (&p[offset], (uint8_t *)Na2, NONCELEN);
+  memcpy (&p[offset], *Na2, NONCELEN);
 
   fprintf (log,
            "The following new MSG3 ( %u bytes ) has been created by "
@@ -973,7 +973,7 @@ MSG3_receive (FILE *log, int fd, const myKey_t *Kb, myKey_t *Ks, char **IDa,
     }
   lenMsg3 += lenTktCipher;
 
-  if (read (fd, Na2, NONCELEN) < 0)
+  if (read (fd, *Na2, NONCELEN) < 0)
     {
       fprintf (log,
                "Unable to receive all %u bytes of Na2 "
@@ -1041,8 +1041,8 @@ MSG4_new (FILE *log, uint8_t **msg4, const myKey_t *Ks, Nonce_t *fNa2,
   // in with component values
   unsigned lenPlain = NONCELEN + NONCELEN;
   memset (plaintext, 0, PLAINTEXT_LEN_MAX);
-  memcpy (plaintext, fNa2, NONCELEN);
-  memcpy (&plaintext[NONCELEN], Nb, NONCELEN);
+  memcpy (plaintext, *fNa2, NONCELEN);
+  memcpy (&plaintext[NONCELEN], *Nb, NONCELEN);
   // Now, encrypt MSG4 plaintext using the session key Ks;
   // Use the global scratch buffer ciphertext[] to collect the result. Make
   // sure it fits.
@@ -1106,8 +1106,8 @@ MSG4_receive (FILE *log, int fd, const myKey_t *Ks, Nonce_t *rcvd_fNa2,
   unsigned lenDecr
       = decrypt (ciphertext, lenCipher, Ks->key, Ks->iv, decryptext);
 
-  memcpy (rcvd_fNa2, decryptext, NONCELEN);
-  memcpy (Nb, &decryptext[NONCELEN], NONCELEN);
+  memcpy (*rcvd_fNa2, decryptext, NONCELEN);
+  memcpy (*Nb, &decryptext[NONCELEN], NONCELEN);
 
   fprintf (log, "The following Encrypted MSG4 ( %u bytes ) was received:\n",
            lenCipher);
@@ -1134,7 +1134,7 @@ MSG5_new (FILE *log, uint8_t **msg5, const myKey_t *Ks, Nonce_t *fNb)
   // fits
   unsigned lenPlain = NONCELEN;
   memset (plaintext, 0, PLAINTEXT_LEN_MAX);
-  memcpy (plaintext, fNb, NONCELEN);
+  memcpy (plaintext, *fNb, NONCELEN);
   // Now, encrypt( Ks , {plaintext} );
   // Use the global scratch buffer ciphertext[] to collect result. Make sure it
   // fits.
@@ -1202,7 +1202,7 @@ MSG5_receive (FILE *log, int fd, const myKey_t *Ks, Nonce_t *fNb)
   unsigned lenDecr
       = decrypt (ciphertext, lenCipher, Ks->key, Ks->iv, decryptext);
 
-  memcpy (fNb, decryptext, NONCELEN);
+  memcpy (*fNb, decryptext, NONCELEN);
   // Now, Decrypt MSG5 using Ks
   // Use the global scratch buffer decryptext[] to collect the results of
   // decryption Make sure it fits
