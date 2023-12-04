@@ -624,13 +624,13 @@ MSG2_new (FILE *log, uint8_t **msg2, const myKey_t *Ka, const myKey_t *Kb,
 
   memset (plaintext, 0, PLAINTEXT_LEN_MAX);
 
-  memcpy(plaintext, Ks, KEYSIZE);
+  memcpy (plaintext, Ks, KEYSIZE);
   offset += KEYSIZE;
 
-  memcpy(&(plaintext[offset]), &LenA, LENSIZE);
+  memcpy (&(plaintext[offset]), &LenA, LENSIZE);
   offset += LENSIZE;
 
-  memcpy(&(plaintext[offset]), IDa, LenA);
+  memcpy (&(plaintext[offset]), IDa, LenA);
   LenTktPlain = offset + LenA;
 
   fprintf (log, "Plaintext Ticket (%u Bytes) is\n", LenTktPlain);
@@ -658,22 +658,22 @@ MSG2_new (FILE *log, uint8_t **msg2, const myKey_t *Ka, const myKey_t *Kb,
   memset (plaintext, 0, PLAINTEXT_LEN_MAX);
   offset = 0;
 
-  memcpy(plaintext, Ks, KEYSIZE);
+  memcpy (plaintext, Ks, KEYSIZE);
   offset += KEYSIZE;
 
-  memcpy(&(plaintext[offset]), &LenB, LENSIZE);
+  memcpy (&(plaintext[offset]), &LenB, LENSIZE);
   offset += LENSIZE;
 
-  memcpy(&(plaintext[offset]), IDb, LenB);
+  memcpy (&(plaintext[offset]), IDb, LenB);
   offset += LenB;
 
-  memcpy(&(plaintext[offset]), *Na, NONCELEN);
+  memcpy (&(plaintext[offset]), *Na, NONCELEN);
   offset += NONCELEN;
 
-  memcpy(&(plaintext[offset]), &LenTktCipher, LENSIZE);
+  memcpy (&(plaintext[offset]), &LenTktCipher, LENSIZE);
   offset += LENSIZE;
 
-  memcpy(&(plaintext[offset]), ciphertext, LenTktCipher);
+  memcpy (&(plaintext[offset]), ciphertext, LenTktCipher);
   LenMsg2Plain = offset + LenTktCipher;
 
   // Now, encrypt Message 2 using Ka.
@@ -708,8 +708,8 @@ MSG2_new (FILE *log, uint8_t **msg2, const myKey_t *Ka, const myKey_t *Kb,
       exitError ("MSG2_new: Calloc failed");
     }
 
-  memcpy(*msg2, &LenMsg2Cipher, LENSIZE);
-  memcpy(&((*msg2)[LENSIZE]), ciphertext2, LenMsg2Cipher);
+  memcpy (*msg2, &LenMsg2Cipher, LENSIZE);
+  memcpy (&((*msg2)[LENSIZE]), ciphertext2, LenMsg2Cipher);
 
   fprintf (log,
            "The following new Encrypted MSG2 ( %u bytes ) has been"
@@ -772,19 +772,20 @@ MSG2_receive (FILE *log, int fd, const myKey_t *Ka, myKey_t *Ks, char **IDb,
            "MSG2_receive() got the following Encrypted MSG2 ( %u bytes ) "
            "Successfully\n",
            LenMsg2Cipher);
-  BIO_dump_indent_fp(log, ciphertext, LenMsg2Cipher, 4);
-  fprintf(log,"\n");
+  BIO_dump_indent_fp (log, ciphertext, LenMsg2Cipher, 4);
+  fprintf (log, "\n");
 
   memset (decryptext, 0, DECRYPTED_LEN_MAX);
 
-  unsigned LenMsg2Decrypt = decrypt (ciphertext, LenMsg2Cipher, Ka->key, Ka->iv, decryptext);
+  unsigned LenMsg2Decrypt
+      = decrypt (ciphertext, LenMsg2Cipher, Ka->key, Ka->iv, decryptext);
 
   int offset = 0;
 
-  memcpy(Ks, decryptext, KEYSIZE);
+  memcpy (Ks, decryptext, KEYSIZE);
   offset += KEYSIZE;
 
-  memcpy(&LenB, &(decryptext[offset]), LENSIZE);
+  memcpy (&LenB, &(decryptext[offset]), LENSIZE);
   offset += LENSIZE;
 
   // allocate mem for IDb
@@ -800,13 +801,13 @@ MSG2_receive (FILE *log, int fd, const myKey_t *Ka, myKey_t *Ks, char **IDb,
       exitError ("Out of Memory allocating IDB in MSG2_receive()");
     }
 
-  memcpy(*IDb, &(decryptext[offset]), LenB);
+  memcpy (*IDb, &(decryptext[offset]), LenB);
   offset += LenB;
 
-  memcpy(*Na, &(decryptext[offset]), NONCELEN);
+  memcpy (*Na, &(decryptext[offset]), NONCELEN);
   offset += NONCELEN;
 
-  memcpy(lenTktCipher, &(decryptext[offset]), LENSIZE);
+  memcpy (lenTktCipher, &(decryptext[offset]), LENSIZE);
   offset += LENSIZE;
 
   // allocate mem for Tkt
@@ -823,7 +824,7 @@ MSG2_receive (FILE *log, int fd, const myKey_t *Ka, myKey_t *Ks, char **IDb,
       exitError ("Out of Memory allocating Ticket in MSG2_receive()");
     }
 
-  memcpy(*tktCipher, &(decryptext[offset]), *lenTktCipher);
+  memcpy (*tktCipher, &(decryptext[offset]), *lenTktCipher);
   offset += *lenTktCipher;
 }
 
@@ -998,9 +999,10 @@ MSG4_new (FILE *log, uint8_t **msg4, const myKey_t *Ks, Nonce_t *fNa2,
   unsigned lenMsg4 = LENSIZE + lenCipher;
   // unsigned lenMsg4 = lenCipher;
   *msg4 = calloc (1, lenMsg4);
-  if (*msg4 == NULL) {
-    exitError("MSG4_new(): calloc for msg4 failed");
-  }
+  if (*msg4 == NULL)
+    {
+      exitError ("MSG4_new(): calloc for msg4 failed");
+    }
   memcpy (*msg4, &lenCipher, LENSIZE);
   memcpy (&((*msg4)[LENSIZE]), ciphertext, lenCipher);
 
@@ -1059,8 +1061,8 @@ MSG4_receive (FILE *log, int fd, const myKey_t *Ks, Nonce_t *rcvd_fNa2,
   fprintf (log, "The following Encrypted MSG4 ( %u bytes ) was received:\n",
            lenCipher);
   BIO_dump_indent_fp (log, ciphertext, lenCipher, 4);
-  fprintf(log, "\n\n");
-  fflush(log);
+  fprintf (log, "\n\n");
+  fflush (log);
 }
 
 //-----------------------------------------------------------------------------

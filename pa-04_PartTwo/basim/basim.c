@@ -59,8 +59,8 @@ main (int argc, char *argv[])
       exit (-1);
     }
 
-  fd_A2B = atoi(argv[1]); // Read from Amal   File Descriptor
-  fd_B2A = atoi(argv[2]); // Send to   Amal   File Descriptor
+  fd_A2B = atoi (argv[1]); // Read from Amal   File Descriptor
+  fd_B2A = atoi (argv[2]); // Send to   Amal   File Descriptor
 
   log = fopen ("basim/logBasim.txt", "w");
   if (!log)
@@ -124,10 +124,10 @@ main (int argc, char *argv[])
   fprintf (log, "    Ks { Key , IV } (48 Bytes ) is:\n");
   BIO_dump_indent_fp (log, &Ks, KEYSIZE, 4);
   fprintf (log, "\n    IDa = '%s'\n", IDa);
-  
+
   fprintf (log, "    Na2 ( 4 Bytes ) is:\n");
   BIO_dump_indent_fp (log, Na2, NONCELEN, 4);
-  fprintf(log, "\n");
+  fprintf (log, "\n");
   //*************************************
   // Construct & Send    Message 4
   //*************************************
@@ -143,9 +143,9 @@ main (int argc, char *argv[])
 
   fprintf (log, "\nBasim is sending this nonce Nb in MSG4:\n");
   BIO_dump_indent_fp (log, Nb, NONCELEN, 4);
-  fprintf(log, "\n");
+  fprintf (log, "\n");
   unsigned msg4Len = MSG4_new (log, &msg4, &Ks, &fNa2, &Nb);
-  write(fd_B2A, msg4, msg4Len);
+  write (fd_B2A, msg4, msg4Len);
   fprintf (log, "Basim Sent the above MSG4 to Amal\n\n");
   //*************************************
   // Receive   & Process Message 5
@@ -160,9 +160,11 @@ main (int argc, char *argv[])
   BIO_dump_indent_fp (log, fNb, NONCELEN, 4);
   fprintf (log, "\n");
   Nonce_t fNb_amal;
-  MSG5_receive(log, fd_A2B, &Ks, &fNb_amal);
+  MSG5_receive (log, fd_A2B, &Ks, &fNb_amal);
 
-  fprintf(log, "\nBasim received Message 5 from Amal with this f( Nb ): >>>> VALID\n");
+  fprintf (
+      log,
+      "\nBasim received Message 5 from Amal with this f( Nb ): >>>> VALID\n");
   BIO_dump_indent_fp (log, fNb_amal, NONCELEN, 4);
 
   //*************************************

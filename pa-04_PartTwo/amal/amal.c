@@ -165,25 +165,25 @@ main (int argc, char *argv[])
   Nonce_t Na_msg2;
   myKey_t Ks;
 
-  fflush(log);
+  fflush (log);
   MSG2_receive (log, fd_K2A, &Ka, &Ks, &IDb_msg2, &Na_msg2, &lenTktCipher,
                 (uint8_t **)&tktCipher);
 
   fprintf (log, "Amal received the following in message 2 from the KDC\n");
   fprintf (log, "    Ks { Key , IV } (%lu Bytes ) is:\n", KEYSIZE);
   BIO_dump_indent_fp (log, &Ks, KEYSIZE, 4);
-  fprintf(log, "\n");
+  fprintf (log, "\n");
   fprintf (log, "    IDb (%lu Bytes):   ..... MATCH\n", strlen (IDb_msg2) + 1);
   BIO_dump_indent_fp (log, IDb_msg2, strlen (IDb_msg2) + 1, 4);
-  fprintf(log, "\n");
+  fprintf (log, "\n");
   fprintf (log, "    Received Copy of Na (%lu bytes):    >>>> VALID\n",
            NONCELEN);
   BIO_dump_indent_fp (log, Na_msg2, NONCELEN, 4);
-  fprintf(log, "\n");
+  fprintf (log, "\n");
   fprintf (log, "    Encrypted Ticket (%u bytes):\n", lenTktCipher);
   BIO_dump_indent_fp (log, tktCipher, lenTktCipher, 4);
-  fprintf(log, "\n");
-  fflush(log);
+  fprintf (log, "\n");
+  fflush (log);
 
   free (IDb_msg2);
 
@@ -197,8 +197,8 @@ main (int argc, char *argv[])
 
   fprintf (log, "Amal is sending this nonce Na2 in Message 3:\n");
   BIO_dump_indent_fp (log, Na2, NONCELEN, 4);
-  fprintf(log, "\n");
-  fflush(log);
+  fprintf (log, "\n");
+  fflush (log);
 
   char *msg3;
   unsigned LenMsg3
@@ -229,13 +229,13 @@ main (int argc, char *argv[])
 
   fprintf (log, "Amal is expecting back this f( Na2 ) in MSG4:\n");
   BIO_dump_indent_fp (log, fNa2, NONCELEN, 4);
-  fprintf(log, "\n");
+  fprintf (log, "\n");
   fprintf (log, "Basim returned the following f( Na2 )   >>>> VALID\n");
   BIO_dump_indent_fp (log, fNa2_msg4, NONCELEN, 4);
-  fprintf(log, "\n");
+  fprintf (log, "\n");
   fprintf (log, "Amal also received this Nb :\n");
   BIO_dump_indent_fp (log, Nb, NONCELEN, 4);
-  fprintf(log, "\n");
+  fprintf (log, "\n");
 
   //*************************************
   // Construct & Send    Message 5
@@ -252,13 +252,14 @@ main (int argc, char *argv[])
 
   fprintf (log, "Amal is sending this f( Nb ) in MSG5:\n");
   BIO_dump_indent_fp (log, fNb, NONCELEN, 4);
-  fprintf(log, "\n");
+  fprintf (log, "\n");
 
-  LenMsg5 = MSG5_new (log, (uint8_t ** )&msg5, &Ks, &fNb);
+  LenMsg5 = MSG5_new (log, (uint8_t **)&msg5, &Ks, &fNb);
 
   write (fd_A2B, msg5, LenMsg5);
 
-  fprintf(log, "Amal sent the above Message 5 ( %lu bytes ) to Basim\n", LenMsg5 - NONCELEN);
+  fprintf (log, "Amal sent the above Message 5 ( %lu bytes ) to Basim\n",
+           LenMsg5 - NONCELEN);
 
   free (msg5);
 
@@ -267,7 +268,7 @@ main (int argc, char *argv[])
   //*************************************
 
   fprintf (log, "\nAmal has terminated normally. Goodbye\n");
-  fflush(log);
+  fflush (log);
   fclose (log);
   return 0;
 }
