@@ -641,7 +641,6 @@ MSG2_new (FILE *log, uint8_t **msg2, const myKey_t *Ka, const myKey_t *Kb,
       plaintext[i + offset] = ((uint8_t *)IDa)[i];
     }
   LenTktPlain = offset + LenA;
-
   fprintf (log, "Plaintext Ticket (%u Bytes) is\n", LenTktPlain);
   BIO_dump_indent_fp (log, plaintext, LenTktPlain, 4);
   fprintf (log, "\n");
@@ -727,7 +726,6 @@ MSG2_new (FILE *log, uint8_t **msg2, const myKey_t *Ka, const myKey_t *Kb,
   fprintf (log, "    Encrypted Ticket (%u Bytes) is\n", LenTktCipher);
   BIO_dump_indent_fp (log, ciphertext, LenTktCipher, 4);
   fprintf (log, "\n");
-
   // Copy the encrypted ciphertext to Caller's msg2 buffer.
   LenMsg2 = LenMsg2Cipher + LENSIZE;
   *msg2 = calloc (1, LenMsg2);
@@ -735,22 +733,14 @@ MSG2_new (FILE *log, uint8_t **msg2, const myKey_t *Ka, const myKey_t *Kb,
     {
       exitError ("MSG2_new: Calloc failed");
     }
-
-  for (int i = 0; i < LENSIZE; i++)
-    {
-      *msg2[i] = ((uint8_t *)&LenMsg2Cipher)[i];
-    }
-
-  for (int i = 0; i < LenMsg2Cipher; i++)
-    {
-      *msg2[i + LENSIZE] = ((uint8_t *)ciphertext2)[i];
-    }
-
+  memcpy(*msg2, &LenMsg2Cipher, LENSIZE);
+  memcpy(&(*msg2)[LENSIZE], ciphertext2, LenMsg2Cipher);
+  // memcpy(*msg2, ciphertext2, LenMsg2Cipher);
   fprintf (log,
            "The following new Encrypted MSG2 ( %u bytes ) has been"
            " created by MSG2_new():  \n",
-           LenMsg2);
-  BIO_dump_indent_fp (log, *msg2, LenMsg2, 4);
+           LenMsg2Cipher);
+  BIO_dump_indent_fp (log, ciphertext2, LenMsg2Cipher, 4);
   fprintf (log, "\n");
 
   fflush (log);
@@ -767,7 +757,6 @@ void
 MSG2_receive (FILE *log, int fd, const myKey_t *Ka, myKey_t *Ks, char **IDb,
               Nonce_t *Na, unsigned *lenTktCipher, uint8_t **tktCipher)
 {
-
   if (log == NULL || fd == 0 || Ka == NULL || Ks == NULL || IDb == NULL
       || Na == NULL || lenTktCipher == NULL || tktCipher == NULL)
     {
@@ -1225,5 +1214,5 @@ fNonce (Nonce_t r, Nonce_t n)
 {
   // Note that the nonces are store in Big-Endian byte order
   // This affects how you do arithmetice on the noces, e.g. when you add 1
-  *r = htonl((ntohl(*n) + 1));
+  *r = htonl ((ntohl (*n) + 1));
 }

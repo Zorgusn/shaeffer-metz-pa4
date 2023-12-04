@@ -139,19 +139,19 @@ int main ( int argc , char * argv[] )
 	// On success, print "Basim has this Master Ka { key , IV }\n" to the Log file
 	fprintf(log, "KDC: created this session key Ks { Key , IV } (48 Bytes ) is:\n");
     // BIO_dump the Key IV indented 4 spaces to the right
-    BIO_dump_indent_fp(log, Ks.key, SYMMETRIC_KEY_LEN, 4);
+    BIO_dump_indent_fp(log, Ks.key, KEYSIZE, 4);
     fprintf( log , "\n" );
 	// BIO_dump the IV indented 4 spaces to the right
-    BIO_dump_indent_fp(log, Ks.iv, INITVECTOR_LEN, 4);
-    fprintf( log , "\n" );
+    // BIO_dump_indent_fp(log, Ks.iv, INITVECTOR_LEN, 4);
+    // fprintf( log , "\n" );
+    
     fflush( log ) ;
-
     unsigned LenMsg2 = MSG2_new(log, &msg2, &Ka, &Kb, &Ks, IDa, IDb, &Na);
 
     // send it
 
     write(fd_K2A, msg2, LenMsg2);
-    fprintf(log, "The KDC sent the above Encrypted MSG2 ( %u bytes ) Successfully\n", LenMsg2);
+    fprintf(log, "The KDC sent the above Encrypted MSG2 ( %u bytes ) Successfully\n", LenMsg2 - 4); //HARDCODED MAYBE FIX THIS
 
     //*************************************   
     // Final Clean-Up

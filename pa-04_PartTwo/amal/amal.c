@@ -159,7 +159,7 @@ main (int argc, char *argv[])
   fprintf (log, "         MSG2 Receive\n");
   BANNER (log);
 
-  char *IDb_msg2, *tktCipher;
+  char *IDb_msg2 = "", *tktCipher = "";
   unsigned lenTktCipher;
   Nonce_t Na_msg2;
   myKey_t Ks;
